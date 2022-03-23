@@ -1,10 +1,22 @@
+const mongoose = require("mongoose");
+const messageModel = require("../Models/messageModel");
+
 module.exports = (ioServer) => {
 	// Testing handling function
-	const testFunc = function (payload) {
+	const chatMessage = function (payload) {
 		const socket = this;
-		const { message } = payload;
-		console.log(socket.id, "sent this:", message);
+		const { targetRoom, username, message } = payload;
+		console.log(socket.id, "sent this:", message, "|| room:", targetRoom);
+		ioServer.in(targetRoom).emit("receivemessage", { username, message });
+	};
+	const joinRoom = function (payload) {
+		const socket = this;
+		// Join rooms provided in payload
+		for (let i = 0; i < payload.length; i++) {
+			socket.join(payload[i]);
+			console.log(socket.id, "Joining Room:", payload[i]);
+		}
 	};
 
-	return { testFunc };
+	return { chatMessage, joinRoom };
 };

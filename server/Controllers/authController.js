@@ -1,4 +1,5 @@
 const userModel = require("../Models/userModel");
+const { fetchUserInRooms_Ids } = require("./fetchDbData");
 
 const AttemptLogin = async (req, res, next) => {
 	const { email, password } = req.body;
@@ -10,7 +11,7 @@ const AttemptLogin = async (req, res, next) => {
 	if (!matchingPassword) return next("Wrong Password");
 	// Generate JWT and send back
 	const token = await result.generateJWT();
-	res.json({ message: "Logged In", username: result.username, token });
+	res.json({ message: "Logged In", username: result.username, _dbId: result._id, token });
 };
 const AttemptRegister = async (req, res, next) => {
 	const { username, email, password } = req.body;
@@ -21,7 +22,9 @@ const AttemptRegister = async (req, res, next) => {
 		let result = await userModel.findOne({ $or: [{ username: { $regex: new RegExp(`^${username}$`, "i") } }, { email }] });
 		if (result) throw new Error("Username or email already taken");
 		// Register new user into DB
-		//const userDocument = await userModel.create({ username, email, password });
+		// [TODO]: Uncomment this before deploying!
+		// [TODO]: Add user to main room user array in CB function!
+		// const userDocument = await userModel.create({ username, email, password });
 	} catch (error) {
 		return next(error.message);
 	}

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Container, TextField, Typography } from "@mui/material";
 
+// [TODO]:
+// Have loading animation for Heroku Startup timing, gonna take awhile
 const Register = () => {
 	const [username, setUsername] = useState("");
 	const [email, setEmail] = useState("");
@@ -23,6 +25,8 @@ const Register = () => {
 	 * Else,
 	 */
 	const handleRegistering = async () => {
+		// [TODO]:
+		// Validate data bfr sending..
 		try {
 			const res = await fetch("http://localhost:5000/auth/register", {
 				method: "POST",

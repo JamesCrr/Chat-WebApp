@@ -1,47 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "./Pages/Login";
-import Home from "./Pages/Home";
-import NotFound from "./Pages/NotFound";
-import Store from "./Pages/Store";
-import Navbar from "./Pages/Navbar";
+import { Login, Chat, NotFound, Store, Navbar, Register } from "./Pages/index";
 import ProtectedRoute from "./Auth/ProtectedRoute";
 import useAuthHelper from "./Auth/useAuthHelper";
-import Register from "./Pages/Register";
-import { Button } from "@mui/material";
-
-// TESTING SOCKET IO
-import { io } from "socket.io-client";
-const clientSocket = io("http://localhost:5000");
-clientSocket.on("connect_error", (err) => {
-	// Unless introduce middlware functions, such as auth functions
-	console.log("connect error due to", err.message);
-});
 
 const App = () => {
 	const auth = useAuthHelper();
-
-	useEffect(() => {
-		clientSocket.emit("test", { message: `${clientSocket.id} messaging server` });
-	}, [auth.user]);
-
 	return (
 		<>
-			{auth.user && (
-				<>
-					<Button onClick={auth.handleLogout} variant="outlined">
-						Log out
-					</Button>
-					<Navbar />
-				</>
-			)}
+			<Navbar />
 
 			<Routes>
 				<Route path="/" element={<Navigate to="/login" replace />} />
 				<Route path="register" element={<Register />} />
-				<Route path="login" element={auth.user ? <Navigate to="/home" replace /> : <Login LoginUser={auth.handleLogin} />} />
-				<Route element={<ProtectedRoute user={auth.user} />}>
-					<Route path="home" element={<Home />} />
+				<Route path="login" element={auth.isUserLoggedIn() ? <Navigate to="/chat" replace /> : <Login LoginUser={auth.handleLogin} />} />
+				<Route element={<ProtectedRoute user={auth.isUserLoggedIn()} />}>
+					<Route path="chat" element={<Chat auth={auth} />} />
 					<Route path="store" element={<Store />} />
 				</Route>
 				<Route path="*" element={<NotFound />} />

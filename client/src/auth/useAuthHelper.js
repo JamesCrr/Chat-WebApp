@@ -1,17 +1,38 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+const ssjwt = "chatjwt";
+const ssusername = "chatusername";
 const useAuthHelper = () => {
-	const [user, setUser] = useState(false);
+	const [username, setUsername] = useState(null);
+	const [_dbId, setDbId] = useState(null);
+	const [jwt, setJwt] = useState(null);
 
-	const handleLogin = (username, jwtToken) => {
-		console.log("Logging In:", username, jwtToken);
-		setUser(true);
+	useEffect(() => {
+		setJwt(sessionStorage.getItem(ssjwt));
+		setUsername(sessionStorage.getItem(ssusername));
+	}, []);
+
+	const handleLogin = (username, _dbId, jwt) => {
+		setUsername(username);
+		setDbId(_dbId);
+		setJwt(jwt);
+		sessionStorage.setItem(ssjwt, jwt);
+		sessionStorage.setItem(ssusername, username);
 	};
 	const handleLogout = () => {
-		setUser(false);
+		setUsername(null);
+		setDbId(null);
+		setJwt(null);
+		sessionStorage.removeItem(ssjwt);
+		sessionStorage.removeItem(ssusername);
 	};
 
-	return { user, handleLogin, handleLogout };
+	const getUsername = () => username;
+	const getJWT = () => jwt;
+	const getDBID = () => _dbId;
+	const isUserLoggedIn = () => (jwt ? true : false);
+
+	return { handleLogin, handleLogout, getUsername, getJWT, getDBID, isUserLoggedIn };
 };
 
 export default useAuthHelper;

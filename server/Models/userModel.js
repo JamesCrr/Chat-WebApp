@@ -24,7 +24,7 @@ userSchema.methods.matchingPassword = async function (plainTextPassword) {
 	return await bcrypt.compare(plainTextPassword, this.password);
 };
 userSchema.methods.generateJWT = async function () {
-	return await jwt.sign({ username: this.username }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_LIFETIME });
+	return await jwt.sign({ username: this.username, id: this._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_LIFETIME });
 };
 
 userSchema.pre("save", async function (next) {

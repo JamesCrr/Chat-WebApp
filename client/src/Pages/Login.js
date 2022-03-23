@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Button, Container, TextField, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 
+// [TODO]:
+// Have loading animation for Heroku Startup timing, gonna take awhile
 const Login = ({ LoginUser }) => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -13,6 +15,8 @@ const Login = ({ LoginUser }) => {
 		setPassword(e.target.value);
 	};
 	const handleLogin = async () => {
+		// [TODO]:
+		// Validate data bfr sending..
 		try {
 			const res = await fetch("http://localhost:5000/auth/login", {
 				method: "POST",
@@ -25,8 +29,8 @@ const Login = ({ LoginUser }) => {
 			// Throw a different status for our own errors
 			if (res.status === 404) throw new Error("Unable to login");
 			const data = await res.json();
-			const { username, token } = data;
-			LoginUser(username, token);
+			const { username, _dbId, token } = data;
+			LoginUser(username, _dbId, token);
 		} catch (error) {
 			console.log(error);
 		}
