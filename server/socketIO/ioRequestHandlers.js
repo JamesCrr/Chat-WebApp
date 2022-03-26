@@ -17,6 +17,15 @@ module.exports = (ioServer) => {
 			console.log(socket.id, "Joining Room:", payload[i]);
 		}
 	};
+	const leaveRoom = function (payload) {
+		const socket = this;
+		if (typeof payload === "string") payload = [payload];
+		// Join rooms provided in payload
+		for (let i = 0; i < payload.length; i++) {
+			socket.leave(payload[i]);
+			console.log(socket.id, "Leaving Room:", payload[i]);
+		}
+	};
 
-	return { chatMessage, joinRoom };
+	return { chatMessage, joinRoom, leaveRoom };
 };

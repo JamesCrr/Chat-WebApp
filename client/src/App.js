@@ -8,8 +8,6 @@ const App = () => {
 	const auth = useAuthHelper();
 	return (
 		<>
-			<Navbar />
-
 			<Routes>
 				<Route path="/" element={<Navigate to="/login" replace />} />
 				<Route path="register" element={<Register />} />
@@ -20,6 +18,7 @@ const App = () => {
 				</Route>
 				<Route path="*" element={<NotFound />} />
 			</Routes>
+			<Navbar />
 		</>
 	);
 };

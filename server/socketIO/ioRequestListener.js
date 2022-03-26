@@ -9,7 +9,7 @@ const onConnection = (socket) => {
 	console.log(socket.id, "connected to server");
 
 	// Login => register socket to all user's rooms, send whatever else needed
-	socket.on("joinroom", joinRoom);
+	socket.on("joinrooms", joinRoom);
 	// Join Room => register user to room
 	// Leave Room => unregister user from room
 

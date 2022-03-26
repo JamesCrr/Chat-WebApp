@@ -1,63 +1,76 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import useSocketIO from "../SocketIO/useSocketIO";
-import { Button, TextField, Typography, Box } from "@mui/material";
+import { styled, Button, Box } from "@mui/material";
+import ChatLog from "./ChatLog";
+import RoomList from "./RoomList";
+
+const ChatContainer = styled(Box)(({ theme }) => ({
+	display: "flex",
+	justifyContent: "space-around",
+	alignItems: "center",
+}));
 
 const Chat = ({ auth }) => {
-	const [socketError, setSocketError] = useState(false);
-	const socketInstance = useSocketIO(auth, socketConnectionError);
-
-	/******** Temp ********/
-	const [chatLog, setChatLog] = useState([]);
-	const [textValue, setTextValue] = useState("");
-	/*********************************/
-
-	useEffect(() => {
-		return () => socketInstance.disconnectSocket();
-	}, []);
-	useEffect(() => {
-		// TEMP, registering receving message froom socket
-		// Rebuild listener function as internal state has changed
-		socketInstance.unregisterListener("receivemessage", receivedSocketMessage);
-		socketInstance.registerListener("receivemessage", receivedSocketMessage);
-		return () => {
-			socketInstance.unregisterListener("receivemessage", receivedSocketMessage);
-		};
-	}, [chatLog]);
+	const socketInstance = useSocketIO(auth.getJWT(), socketConnectionError, socketConnectionSuccess);
+	const [socketError, setSocketError] = useState(false); // Socket has any errors?
+	const [socketLoading, setSocketLoading] = useState(true); // Socket still loading?
+	// Currently selected Room
+	const [currentRoom, setCurrentRoom] = useState(null);
 
 	// Hoisted function
-	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function#function_declaration_hoisting
+	/**
+	 * Socket Connection Error callback
+	 */
 	function socketConnectionError() {
 		console.log("Socket Connection Error Callback!");
 		setSocketError(true);
+		setSocketLoading(false);
 	}
+	function socketConnectionSuccess() {
+		console.log("Socket Connection Success Callback!");
+		setSocketLoading(false);
+	}
+
+	/**
+	 * When the current Room changes
+	 * @param {Object} newRoom New current room
+	 */
+	const onChangeCurrentRoom = (newRoom) => setCurrentRoom(newRoom);
+	/**
+	 * Rooms for socket to join
+	 * @param {Object} rooms Rooms for socket to join
+	 */
+	const emitJoinRooms = (rooms) => socketInstance.emitEvent("joinrooms", rooms);
+	/**
+	 * When user submitting new message
+	 * @param {String} message New message to send
+	 */
+	const emitMessage = (message) => socketInstance.emitEvent("chatmessage", { targetRoom: currentRoom, message, username: auth.getUsername() });
 
 	/******** Temp ********/
 	const toggleError = () => {
 		setSocketError(!socketError);
-		socketInstance.changeCurrentRoom("new");
 		socketInstance.printSocketRef();
 	};
-	const onTxtValChange = (e) => {
-		setTextValue(e.target.value);
-	};
-	const onTxtValSubmit = (e) => {
-		e.preventDefault();
-		console.log("submiting", textValue);
-		socketInstance.emitMessage(textValue);
-		setTextValue("");
-	};
-	const receivedSocketMessage = (payload) => {
-		const { username, message } = payload;
-		console.log("recevied mesage", payload);
 
-		const tempChatLog = chatLog.slice();
-		tempChatLog.push({ username, message });
-		setChatLog(tempChatLog);
-	};
 	/*********************************/
 
 	return (
 		<div>
+			{socketLoading ? (
+				<h1>Socket Loading</h1>
+			) : (
+				<ChatContainer>
+					<RoomList DBID={auth.getDBID()} joinRoomsFunc={emitJoinRooms} currentRoom={currentRoom} currentRoomChangedFunc={onChangeCurrentRoom} />
+					<ChatLog
+						registerListener={socketInstance.registerListener}
+						unregisterListener={socketInstance.unregisterListener}
+						submitFieldValueFunc={emitMessage}
+						currentRoom={currentRoom}
+					/>
+				</ChatContainer>
+			)}
+
 			{auth.isUserLoggedIn() && (
 				<Button onClick={auth.handleLogout} variant="outlined">
 					Log out
@@ -68,21 +81,6 @@ const Chat = ({ auth }) => {
 					SWICH STATETE
 				</Button>
 			</form>
-
-			<form onSubmit={onTxtValSubmit}>
-				{chatLog.map((singleChatBubble) => {
-					return (
-						<Box key={Math.random()}>
-							<Typography variant="h5">{singleChatBubble.username}:</Typography>
-							<Typography variant="h6">{singleChatBubble.message}</Typography>
-						</Box>
-					);
-				})}
-				<TextField onChange={onTxtValChange} value={textValue} variant="outlined" />
-			</form>
-
-			<h2>Chat</h2>
-			<h2>Chat</h2>
 		</div>
 	);
 };

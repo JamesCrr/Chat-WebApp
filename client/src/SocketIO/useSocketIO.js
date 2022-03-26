@@ -3,18 +3,13 @@ import { io } from "socket.io-client";
 
 // useRef instead of this??
 // Tested when rerendering but was NOT set back to null
-// Might cause errors in the future but nt sure also
 let socketRef = null;
-const useSocketIO = (auth, errorCallback) => {
-	const [currentRoom, setCurrentRoom] = useState(null);
-
+const useSocketIO = (jwt, errorCallback, connectedCallback) => {
 	useEffect(() => {
-		// const connectTimeOut = setTimeout(() => connectSocket(), 500); clearTimeout(connectTimeOut);
 		connectSocket();
-		const socketJoinRooms = setTimeout(makeSocketJoinUserRooms, 500);
 		// Prevent memory leak if component was unmounted bfr being called
 		return () => {
-			clearInterval(socketJoinRooms);
+			disconnectSocket();
 		};
 	}, []);
 
@@ -22,12 +17,13 @@ const useSocketIO = (auth, errorCallback) => {
 	 * Connects the socket to the Server
 	 */
 	const connectSocket = () => {
-		socketRef = io("http://localhost:5000", { auth: { token: auth.getJWT() } });
+		socketRef = io("http://localhost:5000", { auth: { token: jwt } });
+		socketRef.on("connect", connectedCallback);
 		socketRef.on("connect_error", (err) => {
 			console.log("SocketIO Connect Error:", err.message);
 			// Disconnect socket and call connection callback
-			disconnectSocket();
 			errorCallback();
+			disconnectSocket();
 		});
 	};
 	/**
@@ -38,47 +34,33 @@ const useSocketIO = (auth, errorCallback) => {
 		socketRef.disconnect();
 		socketRef = null;
 	};
+
 	/**
-	 * Makes socket join all the rooms that user is in
+	 * Register listener function to SocketIO event
+	 * @param {String} eventName Event to listen to
+	 * @param {Function} listenerFunc Function to receive the event
 	 */
-	const makeSocketJoinUserRooms = async () => {
-		// Get all rooms user is in
-		const result = await fetch("http://localhost:5000/chat/myrooms", {
-			headers: {
-				_dbId: auth.getDBID(),
-			},
-		});
-		const resultJSON = await result.json();
-		//	TEMP SETTING STARTING ROOM HERER
-		setCurrentRoom(resultJSON.rooms[0]);
-		//******************************** */
-		// Send to SocketIO
-		socketRef.emit("joinroom", resultJSON.rooms);
-	};
+	const registerListener = (eventName, listenerFunc) => socketRef && socketRef.on(eventName, listenerFunc);
+	/**
+	 * Unregister listener function to SocketIO event
+	 * @param {String} eventName Event to unregister from
+	 * @param {Function} listenerFunc Function that was receiving the event
+	 */
+	const unregisterListener = (eventName, listenerFunc) => socketRef && socketRef.off(eventName, listenerFunc);
+	/**
+	 * Emits event to SocketIO Listener
+	 * @param {*} eventName Event name to emit
+	 * @param {*} payload Payload to carry when emitting event
+	 */
+	const emitEvent = (eventName, payload) => socketRef && socketRef.emit(eventName, payload);
 
 	/******** Temp ********/
-	const changeCurrentRoom = (newRoom) => {
-		setCurrentRoom(newRoom);
-	};
 	const printSocketRef = () => {
 		console.log(socketRef);
 	};
-	// TESTING  register listener function for socket events
-	const registerListener = (eventName, listenerFunc) => {
-		if (!socketRef) return;
-		socketRef.on(eventName, listenerFunc);
-	};
-	const unregisterListener = (eventName, listenerFunc) => {
-		if (!socketRef) return;
-		socketRef.off(eventName, listenerFunc);
-	};
-	// TESTING emit message to socket server
-	const emitMessage = (message) => {
-		socketRef.emit("chatmessage", { targetRoom: currentRoom, message, username: auth.getUsername() });
-	};
 	/*********************************/
 
-	return { disconnectSocket, unregisterListener, registerListener, emitMessage, changeCurrentRoom, printSocketRef };
+	return { unregisterListener, registerListener, emitEvent, printSocketRef };
 };
 
 export default useSocketIO;
