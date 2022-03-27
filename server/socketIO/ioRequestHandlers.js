@@ -3,11 +3,11 @@ const { addMessageToDb } = require("./ioToDbRequests");
 module.exports = (ioServer) => {
 	const chatMessage = function (payload) {
 		const socket = this;
-		const { targetRoom, username, userId, message } = payload;
-		console.log(socket.id, "sent this:", message, "|| room:", targetRoom);
-		ioServer.in(targetRoom).emit("receivemessage", { username, message });
+		const { roomTarget, sender, content } = payload;
+		console.log(socket.id, "sent this:", content, "|| room:", roomTarget);
+		ioServer.in(roomTarget).emit("receivemessage", { roomTarget, sender, content });
 		// Send to DB
-		//addMessageToDb(message, userId, targetRoom);
+		//addMessageToDb(content, sender, roomTarget);
 	};
 	const joinRoom = function (payload) {
 		const socket = this;

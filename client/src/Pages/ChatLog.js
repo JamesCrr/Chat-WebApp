@@ -16,24 +16,8 @@ const ChatTextField = styled(TextField)(({ theme }) => ({
 	},
 }));
 
-const ChatLog = ({ registerListener, unregisterListener, submitFieldValueFunc, currentRoom }) => {
-	const [chatLog, setChatLog] = useState([]);
+const ChatLog = ({ chatLog, submitFieldValueFunc }) => {
 	const [fieldValue, setFieldValue] = useState("");
-
-	useEffect(() => {
-		// Fetch existing chats from all rooms
-	}, []);
-	useEffect(() => {
-		// Reregister listener func everytime rerender
-		registerListener("receivemessage", onMessageReceived);
-		return () => {
-			unregisterListener("receivemessage", onMessageReceived);
-		};
-	}, [registerListener, unregisterListener, chatLog]);
-	useEffect(() => {
-		console.log("CHANGING ROOM, Clearinfg chat");
-		setChatLog([]);
-	}, [currentRoom]);
 
 	const onFieldValueChange = (e) => {
 		setFieldValue(e.target.value);
@@ -44,18 +28,11 @@ const ChatLog = ({ registerListener, unregisterListener, submitFieldValueFunc, c
 		submitFieldValueFunc(fieldValue);
 		setFieldValue("");
 	};
-	const onMessageReceived = (payload) => {
-		const { username, message } = payload;
-		console.log("recevied mesage", payload);
-		const tempChatLog = chatLog.slice();
-		tempChatLog.push({ username, message });
-		setChatLog(tempChatLog);
-	};
 
-	const renderChat = (username, text) => {
+	const renderChat = (name, text) => {
 		return (
 			<Box key={Math.random()}>
-				<Typography variant="h5">{username}:</Typography>
+				<Typography variant="h5">{name}:</Typography>
 				<Typography variant="h6">{text}</Typography>
 			</Box>
 		);
@@ -63,7 +40,7 @@ const ChatLog = ({ registerListener, unregisterListener, submitFieldValueFunc, c
 
 	return (
 		<ChatLogContainer>
-			<ChatLogBox>{chatLog.map((chatObject) => renderChat(chatObject.username, chatObject.message))}</ChatLogBox>
+			<ChatLogBox>{chatLog.map((chatObject) => renderChat(chatObject.sender, chatObject.content))}</ChatLogBox>
 			<form onSubmit={onFieldSubmit}>
 				<ChatTextField onChange={onFieldValueChange} value={fieldValue} variant="outlined" />
 			</form>

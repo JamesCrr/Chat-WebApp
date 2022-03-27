@@ -1,10 +1,10 @@
-const { fetchRoomsUserIsIn_Ids, fetchMessagesInRooms } = require("./fetchDbData");
+const { fetchRoomsUserIsIn_Names, fetchMessagesInRooms } = require("./fetchDbData");
 
 const fetchMyRooms = async (req, res, next) => {
-	const _userDbId = req.get("_userDbId");
-	if (!_userDbId) return next("No User ID Found");
+	const username = req.get("username");
+	if (!username) return next("No Username Found");
 	// Get all associated rooms and send back
-	const rooms = await fetchRoomsUserIsIn_Ids(_userDbId);
+	const rooms = await fetchRoomsUserIsIn_Names(username);
 	res.json({ rooms });
 };
 

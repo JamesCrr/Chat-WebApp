@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useSocketIO from "../SocketIO/useSocketIO";
 import { styled, Button, Box } from "@mui/material";
 import ChatLog from "./ChatLog";
@@ -14,13 +14,29 @@ const Chat = ({ authUser }) => {
 	const socketInstance = useSocketIO(authUser.getJWT(), socketConnectionError, socketConnectionSuccess);
 	const [socketError, setSocketError] = useState(false); // Socket has any errors?
 	const [socketLoading, setSocketLoading] = useState(true); // Socket still loading?
-	// Currently selected Room
+	const dataLoadedRef = useRef(false);
+	// Rooms
+	const [roomArray, setRoomArray] = useState([]);
 	const [currentRoom, setCurrentRoom] = useState(null);
+	// ChatLog
+	const [chatLog, setChatLog] = useState({});
 
-	// Hoisted function
+	useEffect(() => {
+		// Reregister listener functions to prevent stale state
+		socketInstance.registerListener("receivemessage", ioListenerMessageReceived);
+		return () => socketInstance.unregisterListener("receivemessage", ioListenerMessageReceived);
+	}, [ioListenerMessageReceived]);
+	useEffect(() => {
+		// Prevent multiple loading of data
+		if (dataLoadedRef.current || socketLoading) return;
+		fetchInitialData();
+		dataLoadedRef.current = true;
+	}, [socketLoading]);
+
 	/**
 	 * Socket Connection Error callback
 	 */
+	// Hoisted function
 	function socketConnectionError() {
 		console.log("Socket Connection Error Callback!");
 		setSocketError(true);
@@ -32,28 +48,69 @@ const Chat = ({ authUser }) => {
 	}
 
 	/**
+	 * Fetches required initial data
+	 */
+	const fetchInitialData = async () => {
+		// Get all rooms the user is in
+		let result = await fetch("http://localhost:5000/chat/myrooms", {
+			headers: {
+				username: authUser.getUsername(),
+				jwtAuth: authUser.getJWT(),
+			},
+		});
+		const roomResultJSON = await result.json();
+		// Inform SocketIO
+		socketInstance.emitEvent("joinrooms", roomResultJSON.rooms);
+		// Get messages in all Rooms
+		result = await fetch("http://localhost:5000/chat/myroomsmessages", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				jwtAuth: authUser.getJWT(),
+			},
+			body: JSON.stringify({ rooms: roomResultJSON.rooms }),
+		});
+		const messageResultJSON = await result.json();
+		// Set State
+		setRoomArray(roomResultJSON.rooms);
+		setCurrentRoom(roomResultJSON.rooms[0]);
+		setChatLog(messageResultJSON);
+	};
+
+	/**
 	 * When the current Room changes
 	 * @param {Object} newRoom New current room
 	 */
-	const onChangeCurrentRoom = (newRoom) => setCurrentRoom(newRoom);
-	/**
-	 * Rooms for socket to join
-	 * @param {Object} rooms Rooms for socket to join
-	 */
-	const ioEmitJoinRooms = (rooms) => socketInstance.emitEvent("joinrooms", rooms);
+	const onChangeCurrentRoom = (newRoom) => {
+		setCurrentRoom(newRoom);
+	};
 	/**
 	 * When user submitting new message
-	 * @param {String} message New message to send
+	 * @param {String} content New message to send
 	 */
-	const ioEmitMessage = (message) =>
-		socketInstance.emitEvent("chatmessage", { targetRoom: currentRoom, message, username: authUser.getUsername(), userId: authUser.getDBID() });
+	const ioEmitMessage = (content) => socketInstance.emitEvent("chatmessage", { roomTarget: currentRoom, content, sender: authUser.getUsername() });
+
+	/**
+	 * Listener function when receiving new message
+	 * @param {Object} payload Message Details
+	 */
+	function ioListenerMessageReceived(payload) {
+		const { roomTarget, sender, content } = payload;
+		console.log("recevied mesage", payload);
+		// Generate new array, push latest message in
+		const tempChatLog = chatLog[roomTarget].slice();
+		tempChatLog.push({ sender, content });
+		// Modify state
+		const newState = { ...chatLog };
+		newState[roomTarget] = tempChatLog;
+		setChatLog(newState);
+	}
 
 	/******** Temp ********/
 	const toggleError = () => {
 		setSocketError(!socketError);
 		socketInstance.printSocketRef();
 	};
-
 	/*********************************/
 
 	return (
@@ -62,19 +119,8 @@ const Chat = ({ authUser }) => {
 				<h1>Socket Loading</h1>
 			) : (
 				<ChatContainer>
-					<RoomList
-						jwt={authUser.getJWT()}
-						userId={authUser.getDBID()}
-						ioJoinRooms={ioEmitJoinRooms}
-						currentRoom={currentRoom}
-						currentRoomChangedFunc={onChangeCurrentRoom}
-					/>
-					<ChatLog
-						registerListener={socketInstance.registerListener}
-						unregisterListener={socketInstance.unregisterListener}
-						submitFieldValueFunc={ioEmitMessage}
-						currentRoom={currentRoom}
-					/>
+					<RoomList roomArray={roomArray} currentRoom={currentRoom} currentRoomChangedFunc={onChangeCurrentRoom} />
+					<ChatLog chatLog={chatLog[currentRoom] ? chatLog[currentRoom] : []} submitFieldValueFunc={ioEmitMessage} />
 				</ChatContainer>
 			)}
 
