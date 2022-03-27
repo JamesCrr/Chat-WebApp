@@ -16,7 +16,7 @@ const RoomListParent = styled(Box)(({ theme }) => ({
 // Could just immediately emit event joinrooms in Chat.js,
 // but if socket was not connected, will not receive the event
 // purpose of socketLoading is to wait till socketIO is connected bfr emitting events
-const RoomList = ({ DBID, joinRoomsFunc, currentRoom, currentRoomChangedFunc }) => {
+const RoomList = ({ jwt, userId, ioJoinRooms, currentRoom, currentRoomChangedFunc }) => {
 	const [roomArray, setRoomArray] = useState([]);
 
 	useEffect(() => {
@@ -30,13 +30,14 @@ const RoomList = ({ DBID, joinRoomsFunc, currentRoom, currentRoomChangedFunc }) 
 		// Get all rooms the user is in
 		const result = await fetch("http://localhost:5000/chat/myrooms", {
 			headers: {
-				_dbId: DBID,
+				_userDbId: userId,
+				jwtAuth: jwt,
 			},
 		});
 		const resultJSON = await result.json();
 		setRoomArray(resultJSON.rooms);
 		currentRoomChangedFunc(resultJSON.rooms[0]);
-		joinRoomsFunc(resultJSON.rooms);
+		ioJoinRooms(resultJSON.rooms);
 	};
 
 	/**

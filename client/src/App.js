@@ -5,15 +5,15 @@ import ProtectedRoute from "./Auth/ProtectedRoute";
 import useAuthHelper from "./Auth/useAuthHelper";
 
 const App = () => {
-	const auth = useAuthHelper();
+	const authUser = useAuthHelper();
 	return (
 		<>
 			<Routes>
 				<Route path="/" element={<Navigate to="/login" replace />} />
 				<Route path="register" element={<Register />} />
-				<Route path="login" element={auth.isUserLoggedIn() ? <Navigate to="/chat" replace /> : <Login LoginUser={auth.handleLogin} />} />
-				<Route element={<ProtectedRoute user={auth.isUserLoggedIn()} />}>
-					<Route path="chat" element={<Chat auth={auth} />} />
+				<Route path="login" element={authUser.isUserLoggedIn() ? <Navigate to="/chat" replace /> : <Login LoginUser={authUser.handleLogin} />} />
+				<Route element={<ProtectedRoute user={authUser.isUserLoggedIn()} />}>
+					<Route path="chat" element={<Chat authUser={authUser} />} />
 					<Route path="store" element={<Store />} />
 				</Route>
 				<Route path="*" element={<NotFound />} />

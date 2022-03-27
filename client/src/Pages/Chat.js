@@ -10,8 +10,8 @@ const ChatContainer = styled(Box)(({ theme }) => ({
 	alignItems: "center",
 }));
 
-const Chat = ({ auth }) => {
-	const socketInstance = useSocketIO(auth.getJWT(), socketConnectionError, socketConnectionSuccess);
+const Chat = ({ authUser }) => {
+	const socketInstance = useSocketIO(authUser.getJWT(), socketConnectionError, socketConnectionSuccess);
 	const [socketError, setSocketError] = useState(false); // Socket has any errors?
 	const [socketLoading, setSocketLoading] = useState(true); // Socket still loading?
 	// Currently selected Room
@@ -40,12 +40,13 @@ const Chat = ({ auth }) => {
 	 * Rooms for socket to join
 	 * @param {Object} rooms Rooms for socket to join
 	 */
-	const emitJoinRooms = (rooms) => socketInstance.emitEvent("joinrooms", rooms);
+	const ioEmitJoinRooms = (rooms) => socketInstance.emitEvent("joinrooms", rooms);
 	/**
 	 * When user submitting new message
 	 * @param {String} message New message to send
 	 */
-	const emitMessage = (message) => socketInstance.emitEvent("chatmessage", { targetRoom: currentRoom, message, username: auth.getUsername() });
+	const ioEmitMessage = (message) =>
+		socketInstance.emitEvent("chatmessage", { targetRoom: currentRoom, message, username: authUser.getUsername(), userId: authUser.getDBID() });
 
 	/******** Temp ********/
 	const toggleError = () => {
@@ -61,18 +62,24 @@ const Chat = ({ auth }) => {
 				<h1>Socket Loading</h1>
 			) : (
 				<ChatContainer>
-					<RoomList DBID={auth.getDBID()} joinRoomsFunc={emitJoinRooms} currentRoom={currentRoom} currentRoomChangedFunc={onChangeCurrentRoom} />
+					<RoomList
+						jwt={authUser.getJWT()}
+						userId={authUser.getDBID()}
+						ioJoinRooms={ioEmitJoinRooms}
+						currentRoom={currentRoom}
+						currentRoomChangedFunc={onChangeCurrentRoom}
+					/>
 					<ChatLog
 						registerListener={socketInstance.registerListener}
 						unregisterListener={socketInstance.unregisterListener}
-						submitFieldValueFunc={emitMessage}
+						submitFieldValueFunc={ioEmitMessage}
 						currentRoom={currentRoom}
 					/>
 				</ChatContainer>
 			)}
 
-			{auth.isUserLoggedIn() && (
-				<Button onClick={auth.handleLogout} variant="outlined">
+			{authUser.isUserLoggedIn() && (
+				<Button onClick={authUser.handleLogout} variant="outlined">
 					Log out
 				</Button>
 			)}

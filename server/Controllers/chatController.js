@@ -1,11 +1,18 @@
-const { fetchUserInRooms_Ids } = require("./fetchDbData");
+const { fetchRoomsUserIsIn_Ids, fetchMessagesInRooms } = require("./fetchDbData");
 
 const fetchMyRooms = async (req, res, next) => {
-	const _dbId = req.get("_dbId");
-	if (!_dbId) return next("No User ID Found");
+	const _userDbId = req.get("_userDbId");
+	if (!_userDbId) return next("No User ID Found");
 	// Get all associated rooms and send back
-	const rooms = await fetchUserInRooms_Ids(_dbId);
+	const rooms = await fetchRoomsUserIsIn_Ids(_userDbId);
 	res.json({ rooms });
 };
 
-module.exports = { fetchMyRooms };
+const fetchRoomsMessages = async (req, res, next) => {
+	const { rooms } = req.body;
+	if (!rooms || rooms.length === 0) return next("No target rooms found");
+	const messages = await fetchMessagesInRooms(rooms);
+	res.json(messages);
+};
+
+module.exports = { fetchMyRooms, fetchRoomsMessages };

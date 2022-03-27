@@ -32,18 +32,18 @@ const fetchRooms = async () => {
  * @returns Array of ObjectIDs of Users
  */
 const fetchUsers_Ids = async () => {
-	const resultUsers = await userModel.find({});
+	const resultUsers = await userModel.find({}).lean();
 	return resultUsers.map((element, index) => {
 		return element._id;
 	});
 };
 
 /**
- *
+ * Fetch rooms that the user is part of
  * @param {String} userDbId DB Id of user to test
  * @returns Array of Room's ObjectIds that user is in
  */
-const fetchUserInRooms_Ids = async (userDbId) => {
+const fetchRoomsUserIsIn_Ids = async (userDbId) => {
 	const mapOfRooms = await fetchRooms();
 	const arrayOfUserRooms = [];
 	mapOfRooms.forEach((room, key) => {
@@ -52,4 +52,21 @@ const fetchUserInRooms_Ids = async (userDbId) => {
 	return arrayOfUserRooms;
 };
 
-module.exports = { fetchRooms, fetchUserInRooms_Ids };
+/**
+ * Fetch all messages of rooms
+ * @param {Object} roomDbIds Array of Ids of targeted rooms
+ * @returns Object that contains all messages of selected rooms
+ */
+const fetchMessagesInRooms = async (roomDbIds) => {
+	const resultMessages = await messageModel.find({ roomTarget: { $in: roomDbIds } }).lean();
+	const roomMessages = {};
+	roomDbIds.map((element) => {
+		roomMessages[element] = [];
+	});
+	resultMessages.map((messageObj) => {
+		roomMessages[messageObj.roomTarget].push({ content: messageObj.content, sender: messageObj.sender });
+	});
+	return resultMessages;
+};
+
+module.exports = { fetchRooms, fetchRoomsUserIsIn_Ids, fetchMessagesInRooms };

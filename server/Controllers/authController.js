@@ -1,5 +1,5 @@
 const userModel = require("../Models/userModel");
-const { fetchUserInRooms_Ids } = require("./fetchDbData");
+const { fetchRoomsUserIsIn_Ids } = require("./fetchDbData");
 
 const AttemptLogin = async (req, res, next) => {
 	const { email, password } = req.body;

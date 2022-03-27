@@ -21,6 +21,9 @@ const ChatLog = ({ registerListener, unregisterListener, submitFieldValueFunc, c
 	const [fieldValue, setFieldValue] = useState("");
 
 	useEffect(() => {
+		// Fetch existing chats from all rooms
+	}, []);
+	useEffect(() => {
 		// Reregister listener func everytime rerender
 		registerListener("receivemessage", onMessageReceived);
 		return () => {
@@ -28,9 +31,6 @@ const ChatLog = ({ registerListener, unregisterListener, submitFieldValueFunc, c
 		};
 	}, [registerListener, unregisterListener, chatLog]);
 	useEffect(() => {
-		/**
-		 * FETCH CHAT HISTORY FROM DB, but now no DB so just clearing it
-		 */
 		console.log("CHANGING ROOM, Clearinfg chat");
 		setChatLog([]);
 	}, [currentRoom]);

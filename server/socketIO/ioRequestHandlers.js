@@ -1,13 +1,13 @@
-const mongoose = require("mongoose");
-const messageModel = require("../Models/messageModel");
+const { addMessageToDb } = require("./ioToDbRequests");
 
 module.exports = (ioServer) => {
-	// Testing handling function
 	const chatMessage = function (payload) {
 		const socket = this;
-		const { targetRoom, username, message } = payload;
+		const { targetRoom, username, userId, message } = payload;
 		console.log(socket.id, "sent this:", message, "|| room:", targetRoom);
 		ioServer.in(targetRoom).emit("receivemessage", { username, message });
+		// Send to DB
+		//addMessageToDb(message, userId, targetRoom);
 	};
 	const joinRoom = function (payload) {
 		const socket = this;
