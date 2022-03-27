@@ -3,6 +3,10 @@ const roomModel = require("../Models/roomModel");
 const messageModel = require("../Models/messageModel");
 const userModel = require("../Models/userModel");
 
+/**
+ * Fetch all rooms in databsae
+ * @returns Map of rooms
+ */
 const fetchRooms = async () => {
 	const resultRooms = await roomModel.find({}).lean();
 	// console.log("RoomsFound:", resultRooms.length);

@@ -54,13 +54,7 @@ const useSocketIO = (jwt, errorCallback, connectedCallback) => {
 	 */
 	const emitEvent = (eventName, payload) => socketRef && socketRef.emit(eventName, payload);
 
-	/******** Temp ********/
-	const printSocketRef = () => {
-		console.log(socketRef);
-	};
-	/*********************************/
-
-	return { unregisterListener, registerListener, emitEvent, printSocketRef };
+	return { unregisterListener, registerListener, emitEvent };
 };
 
 export default useSocketIO;

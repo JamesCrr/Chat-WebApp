@@ -36,7 +36,7 @@ ioServer.on("connection", (socket) => {
 
 	// Join Room => register user to room
 	// Leave Room => unregister user from room
-	socket.on("joinrooms", joinRoom);
+	socket.on("joinroom", joinRoom);
 	socket.on("leaveroom", leaveRoom);
 	// message => send message to target room
 	socket.on("chatmessage", chatMessage);

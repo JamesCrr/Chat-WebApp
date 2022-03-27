@@ -60,7 +60,7 @@ const Chat = ({ authUser }) => {
 		});
 		const roomResultJSON = await result.json();
 		// Inform SocketIO
-		socketInstance.emitEvent("joinrooms", roomResultJSON.rooms);
+		socketInstance.emitEvent("joinroom", { newRoom: false, rooms: roomResultJSON.rooms });
 		// Get messages in all Rooms
 		result = await fetch("http://localhost:5000/chat/myroomsmessages", {
 			method: "POST",
@@ -81,9 +81,26 @@ const Chat = ({ authUser }) => {
 	 * When the current Room changes
 	 * @param {Object} newRoom New current room
 	 */
-	const onChangeCurrentRoom = (newRoom) => {
-		setCurrentRoom(newRoom);
+	const onChangeCurrentRoom = (newRoom) => setCurrentRoom(newRoom);
+
+	/**
+	 *
+	 * @param {String} newRoom Name of new room to create
+	 */
+	const onCreateNewRoom = async (newRoom) => {
+		console.log("RoomToCreate:", newRoom);
+		const result = await fetch("http://localhost:5000/chat/createnewroom", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				jwtAuth: authUser.getJWT(),
+			},
+			body: JSON.stringify({ name: newRoom, firstUsername: authUser.getUsername() }),
+		});
+		const resultJSON = await result.json();
+		console.log(resultJSON);
 	};
+
 	/**
 	 * When user submitting new message
 	 * @param {String} content New message to send
@@ -109,7 +126,6 @@ const Chat = ({ authUser }) => {
 	/******** Temp ********/
 	const toggleError = () => {
 		setSocketError(!socketError);
-		socketInstance.printSocketRef();
 	};
 	/*********************************/
 
@@ -119,7 +135,12 @@ const Chat = ({ authUser }) => {
 				<h1>Socket Loading</h1>
 			) : (
 				<ChatContainer>
-					<RoomList roomArray={roomArray} currentRoom={currentRoom} currentRoomChangedFunc={onChangeCurrentRoom} />
+					<RoomList
+						roomArray={roomArray}
+						currentRoom={currentRoom}
+						currentRoomChangedFunc={onChangeCurrentRoom}
+						createNewRoomFunc={onCreateNewRoom}
+					/>
 					<ChatLog chatLog={chatLog[currentRoom] ? chatLog[currentRoom] : []} submitFieldValueFunc={ioEmitMessage} />
 				</ChatContainer>
 			)}

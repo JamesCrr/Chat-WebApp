@@ -11,19 +11,27 @@ module.exports = (ioServer) => {
 	};
 	const joinRoom = function (payload) {
 		const socket = this;
+		const { rooms, newRoom } = payload;
+		// Convert string to array
+		if (typeof rooms === "string") rooms = [rooms];
 		// Join rooms provided in payload
-		for (let i = 0; i < payload.length; i++) {
-			socket.join(payload[i]);
-			console.log(socket.id, "Joining Room:", payload[i]);
+		for (let i = 0; i < rooms.length; i++) {
+			socket.join(rooms[i]);
+			console.log(socket.id, "Joining Room:", rooms[i]);
+			// Emit joining message
+			if (newRoom) ioServer.in(payload[i]).emit("receivemessage", { sender: null, content: `${socket.id} joined the Room!` });
 		}
 	};
 	const leaveRoom = function (payload) {
 		const socket = this;
+		// Convert string to array
 		if (typeof payload === "string") payload = [payload];
 		// Join rooms provided in payload
 		for (let i = 0; i < payload.length; i++) {
 			socket.leave(payload[i]);
 			console.log(socket.id, "Leaving Room:", payload[i]);
+			// Emit leaving message
+			ioServer.in(payload[i]).emit("receivemessage", { sender: null, content: `${socket.id} left the Room!` });
 		}
 	};
 
