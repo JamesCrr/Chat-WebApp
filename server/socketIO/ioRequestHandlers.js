@@ -7,19 +7,19 @@ module.exports = (ioServer) => {
 		console.log(socket.id, "sent this:", content, "|| room:", roomTarget);
 		ioServer.in(roomTarget).emit("receivemessage", { roomTarget, sender, content });
 		// Send to DB
-		//addMessageToDb(content, sender, roomTarget);
+		// addMessageToDb(content, sender, roomTarget);
 	};
 	const joinRoom = function (payload) {
 		const socket = this;
-		const { rooms, newRoom } = payload;
+		const { roomName, firstTimeJoined } = payload;
 		// Convert string to array
-		if (typeof rooms === "string") rooms = [rooms];
-		// Join rooms provided in payload
-		for (let i = 0; i < rooms.length; i++) {
-			socket.join(rooms[i]);
-			console.log(socket.id, "Joining Room:", rooms[i]);
-			// Emit joining message
-			if (newRoom) ioServer.in(payload[i]).emit("receivemessage", { sender: null, content: `${socket.id} joined the Room!` });
+		if (typeof roomName === "string") roomName = [roomName];
+		// Join roomName provided in payload
+		for (let i = 0; i < roomName.length; i++) {
+			socket.join(roomName[i]);
+			console.log(socket.id, "Joining Room:", roomName[i]);
+			// Emit joining message to members
+			if (firstTimeJoined) ioServer.in(payload[i]).emit("receivemessage", { sender: null, content: `${socket.id} joined the Room!` });
 		}
 	};
 	const leaveRoom = function (payload) {
@@ -34,6 +34,12 @@ module.exports = (ioServer) => {
 			ioServer.in(payload[i]).emit("receivemessage", { sender: null, content: `${socket.id} left the Room!` });
 		}
 	};
+	const deleteRoom = function (payload) {
+		// Emit final event
+		ioServer.in(payload).emit("roomisdeleted", { name: payload });
+		// Make all sockets leave room
+		ioServer.socketsLeave(payload);
+	};
 
-	return { chatMessage, joinRoom, leaveRoom };
+	return { chatMessage, joinRoom, leaveRoom, deleteRoom };
 };

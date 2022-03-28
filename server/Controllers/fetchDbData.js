@@ -56,7 +56,7 @@ const fetchRoomsUserIsIn_Names = async (username) => {
 
 /**
  * Fetch all messages of rooms
- * @param {Object} roomName Array of Names of selected rooms
+ * @param {Array} roomName Array of Names of selected rooms
  * @returns Object that contains all messages of selected rooms
  */
 const fetchMessagesInRooms = async (roomNames) => {

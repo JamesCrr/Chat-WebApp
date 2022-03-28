@@ -11,7 +11,7 @@ const chatRouter = require("./Router/chatRouter");
 const { notFoundMiddlware, errorHandlerMiddleware } = require("./Middleware");
 // Socket IO
 const ioServer = require("socket.io")(httpServer, { cors: { origin: "*" } });
-const { chatMessage, joinRoom, leaveRoom } = require("./SocketIO/ioRequestHandlers")(ioServer);
+const { chatMessage, joinRoom, leaveRoom, deleteRoom } = require("./SocketIO/ioRequestHandlers")(ioServer);
 const { authMiddleware } = require("./SocketIO/ioMiddleware");
 
 // Express Middleware
@@ -38,6 +38,8 @@ ioServer.on("connection", (socket) => {
 	// Leave Room => unregister user from room
 	socket.on("joinroom", joinRoom);
 	socket.on("leaveroom", leaveRoom);
+	// Delete Room => delete room from server
+	socket.on("deleteroom", deleteRoom);
 	// message => send message to target room
 	socket.on("chatmessage", chatMessage);
 
