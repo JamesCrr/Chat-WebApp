@@ -1,5 +1,5 @@
 import { styled, Box, Typography, TextField } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const ChatLogContainer = styled(Box)(({ theme }) => ({
 	width: "80%",

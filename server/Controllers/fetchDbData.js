@@ -43,13 +43,13 @@ const fetchUsers = async () => {
 /**
  * Fetch rooms that the user is part of
  * @param {String} username Name of user to test
- * @returns Array of Room's Names that user is in
+ * @returns Array of Room Objects that user is in
  */
 const fetchRoomsUserIsIn_Names = async (username) => {
 	const mapOfRooms = await fetchRooms();
 	const arrayOfUserRooms = [];
 	mapOfRooms.forEach((room, key) => {
-		if (room.users.find((element) => element.toString() === username)) arrayOfUserRooms.push(room.name);
+		if (room.users.find((element) => element.toString() === username)) arrayOfUserRooms.push(room);
 	});
 	return arrayOfUserRooms;
 };

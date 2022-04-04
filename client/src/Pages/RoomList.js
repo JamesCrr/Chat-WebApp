@@ -24,7 +24,7 @@ const RoomListTextField = styled(TextField)(({ theme }) => ({
 	width: "100%",
 }));
 
-const RoomList = ({ roomArray, currentRoom, currentRoomChangedFunc, createNewRoomFunc }) => {
+const RoomList = ({ roomArray, currentRoomObj, currentRoomChangedFunc, createNewRoomFunc }) => {
 	const [fieldValue, setFieldValue] = useState("");
 
 	/**
@@ -32,8 +32,8 @@ const RoomList = ({ roomArray, currentRoom, currentRoomChangedFunc, createNewRoo
 	 * @param {Object} roomDetails Room details
 	 */
 	const onRoomItemClicked = (roomDetails) => {
-		console.log("RoomClicked:", roomDetails);
-		currentRoomChangedFunc(roomDetails);
+		console.log("RoomClicked:", roomDetails.name);
+		currentRoomChangedFunc(roomDetails.name);
 	};
 
 	const onFieldValueChange = (e) => {

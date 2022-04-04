@@ -16,8 +16,8 @@ const Chat = ({ authUser }) => {
 	const [socketLoading, setSocketLoading] = useState(true); // Socket still loading?
 	const dataLoadedRef = useRef(false);
 	// Rooms
-	const [roomArray, setRoomArray] = useState([]);
-	const [currentRoom, setCurrentRoom] = useState(null);
+	const [roomObjArray, setRoomObjArray] = useState([]);
+	const [currentRoomName, setCurrentRoomName] = useState(null);
 	// ChatLog
 	const [chatLog, setChatLog] = useState({});
 
@@ -64,7 +64,10 @@ const Chat = ({ authUser }) => {
 		});
 		const roomResultJSON = await result.json();
 		// Inform SocketIO
-		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomName: roomResultJSON.rooms });
+		const roomName = roomResultJSON.rooms.map((roomObj) => {
+			return roomObj.name;
+		});
+		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomName });
 		// Get messages in all Rooms
 		result = await fetch("http://localhost:5000/chat/myroomsmessages", {
 			method: "POST",
@@ -72,12 +75,12 @@ const Chat = ({ authUser }) => {
 				"Content-Type": "application/json",
 				jwtAuth: authUser.getJWT(),
 			},
-			body: JSON.stringify({ rooms: roomResultJSON.rooms }),
+			body: JSON.stringify({ rooms: roomName }),
 		});
 		const messageResultJSON = await result.json();
 		// Set State
-		setRoomArray(roomResultJSON.rooms);
-		setCurrentRoom(roomResultJSON.rooms[0]);
+		setRoomObjArray(roomResultJSON.rooms);
+		setCurrentRoomName(roomResultJSON.rooms[0].name);
 		setChatLog(messageResultJSON);
 	};
 
@@ -85,23 +88,23 @@ const Chat = ({ authUser }) => {
 	 * When the current Room changes
 	 * @param {Object} newCurrentRoom New current room
 	 */
-	const onChangeCurrentRoom = (newCurrentRoom) => setCurrentRoom(newCurrentRoom);
+	const onChangeCurrentRoom = (newCurrentRoom) => setCurrentRoomName(newCurrentRoom);
 
 	/**
-	 * Removes a room from roomArray State, if found that is
+	 * Removes a room from roomObjArray State, if found that is
 	 * @param {String} roomToRemove Name of room to remove
 	 */
 	const removeRoomFromState = (roomToRemove) => {
-		const newArray = [...roomArray];
-		const removeIndex = newArray.findIndex((element) => element.toLowerCase() === roomToRemove.toLowerCase());
+		const newArray = [...roomObjArray];
+		const removeIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomToRemove.toLowerCase());
 		if (removeIndex < 0) return false;
 		newArray.splice(removeIndex, 1);
-		setRoomArray(newArray);
+		setRoomObjArray(newArray);
 		return true;
 	};
 
 	/**
-	 *
+	 * When want to create new room
 	 * @param {String} newRoomToCreate Name of new room to create
 	 */
 	const onCreateNewRoom = async (newRoomToCreate) => {
@@ -118,12 +121,13 @@ const Chat = ({ authUser }) => {
 		// [TODO]:
 		// Not created, maybe can display smth here to show that?
 		// ....
+		if (!joined && !created) return;
 
 		// Join room in Socket, Add room to state
 		if (!joined) return;
 		socketInstance.emitEvent("joinroom", { firstTimeJoined: joined, roomName: [room.name] });
 		// Set new room state
-		setRoomArray([...roomArray, room.name]);
+		setRoomObjArray([...roomObjArray, room]);
 		const newChatState = { ...chatLog };
 		let newChatLog = [];
 		// Fetch existing messages from server or empty array
@@ -145,7 +149,7 @@ const Chat = ({ authUser }) => {
 		setChatLog(newChatState);
 	};
 	/**
-	 *
+	 * When want to delete room
 	 * @param {String} name Name of room to delete
 	 */
 	const onDeleteRoom = async (name) => {
@@ -158,6 +162,7 @@ const Chat = ({ authUser }) => {
 			body: JSON.stringify({ name }),
 		});
 		const resultJSON = await result.json();
+		// [TODO]: Error handler, render smth show room was not deleted
 		// Was room removed?
 		if (!resultJSON.room.deletedCount) return;
 		// Leave Socket's room
@@ -169,7 +174,8 @@ const Chat = ({ authUser }) => {
 	 * When user submitting new message
 	 * @param {String} content New message to send
 	 */
-	const ioEmitMessage = (content) => socketInstance.emitEvent("chatmessage", { roomTarget: currentRoom, content, sender: authUser.getUsername() });
+	const ioEmitMessage = (content) =>
+		socketInstance.emitEvent("chatmessage", { roomTarget: currentRoomName, content, sender: authUser.getUsername() });
 	/**
 	 * Listener function when receiving new message
 	 * @param {Object} payload Message details
@@ -193,9 +199,8 @@ const Chat = ({ authUser }) => {
 		const { name } = payload;
 		console.log("DeletingRoom:", name);
 		removeRoomFromState(name);
-		// if currentRoom was deletedRoom
-		// go back to default room
-		setCurrentRoom(roomArray[0]);
+		// currentRoom was deleted, return to default room
+		if (currentRoomName === name) setCurrentRoomName(roomObjArray[0].name);
 	}
 
 	/******** Temp ********/
@@ -211,12 +216,12 @@ const Chat = ({ authUser }) => {
 			) : (
 				<ChatContainer>
 					<RoomList
-						roomArray={roomArray}
-						currentRoom={currentRoom}
+						roomArray={roomObjArray}
+						currentRoom={currentRoomName}
 						currentRoomChangedFunc={onChangeCurrentRoom}
 						createNewRoomFunc={onCreateNewRoom}
 					/>
-					<ChatLog chatLog={chatLog[currentRoom] ? chatLog[currentRoom] : []} submitFieldValueFunc={ioEmitMessage} />
+					<ChatLog chatLog={chatLog[currentRoomName] ? chatLog[currentRoomName] : []} submitFieldValueFunc={ioEmitMessage} />
 				</ChatContainer>
 			)}
 

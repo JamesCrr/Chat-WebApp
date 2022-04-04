@@ -16,7 +16,7 @@ const RoomListItem = ({ roomObj, onItemClicked }) => {
 
 	return (
 		<RoomListItemContainer onClick={() => onItemClicked(roomDetails)}>
-			<Typography>{roomDetails ? roomDetails : ""}</Typography>
+			<Typography>{roomDetails ? roomDetails.name : ""}</Typography>
 		</RoomListItemContainer>
 	);
 };

@@ -8,7 +8,10 @@ const fetchMyRooms = async (req, res, next) => {
 	if (!username) return next("No Username Found");
 	// Get all associated rooms and send back
 	const rooms = await fetchRoomsUserIsIn_Names(username);
-	res.json({ rooms });
+	const filteredRooms = rooms.map((room) => {
+		return { name: room.name, users: room.users };
+	});
+	res.json({ rooms: filteredRooms });
 };
 
 const fetchRoomsMessages = async (req, res, next) => {
@@ -38,12 +41,13 @@ const createNewRoom = async (req, res, next) => {
 		created = true;
 		roomDocument = await roomModel.create({ name, users: [firstUsername], owner: new mongoose.Types.ObjectId() });
 	}
-	res.json({ created, joined, room: roomDocument });
+	res.json({ created, joined, room: { name: roomDocument.name, users: roomDocument.users } });
 };
 
 const deleteRoom = async (req, res, next) => {
 	const { name } = req.body;
 	if (!name) return next("Unable to delete room, Invalid room details");
+	// Delete room
 	const roomDeleteResult = await roomModel.deleteOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, deletable: true });
 	if (roomDeleteResult.deletedCount < 1) return next("No Room deleted, check again!");
 	// Also delete messages of deleted room
@@ -51,4 +55,20 @@ const deleteRoom = async (req, res, next) => {
 	res.json({ room: roomDeleteResult, messages: messageDeleteResult });
 };
 
-module.exports = { fetchMyRooms, fetchRoomsMessages, createNewRoom, deleteRoom };
+const leaveRoom = async (req, res, next) => {
+	const { name, usernameToRemove } = req.body;
+	if (!name || !usernameToRemove) return next("Unable to leave room, Invalid room details");
+	// Does room exist
+	const roomFoundResult = await roomModel.findOne({ name }).lean();
+	if (!roomFoundResult) return next("Room not found, Invalid room details");
+	// Is user in room to begin with
+	const roomUsers = roomFoundResult.users;
+	if (roomUsers.findIndex((user) => user === usernameToRemove) === -1) return next("User not in room to begin with, Unable to remove");
+	// Remove user from room, update DB
+	const newUserArray = roomUsers.filter((user) => user !== usernameToRemove);
+	const updatedRoomResult = await roomModel.findOneAndUpdate({ name }, { users: newUserArray }, { new: true });
+	// Send updated result
+	res.json({ room: { name: updatedRoomResult.name, users: updatedRoomResult.users } });
+};
+
+module.exports = { fetchMyRooms, fetchRoomsMessages, createNewRoom, deleteRoom, leaveRoom };
