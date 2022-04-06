@@ -66,7 +66,7 @@ const fetchMessagesInRooms = async (roomNames) => {
 		roomMessages[element] = [];
 	});
 	resultMessages.map((messageObj) => {
-		roomMessages[messageObj.roomTarget].push({ content: messageObj.content, sender: messageObj.sender });
+		roomMessages[messageObj.roomTarget].push({ _dbId: messageObj._id, content: messageObj.content, sender: messageObj.sender });
 	});
 	return roomMessages;
 };

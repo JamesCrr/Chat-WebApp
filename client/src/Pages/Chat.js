@@ -1,23 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import useSocketIO from "../SocketIO/useSocketIO";
-import { styled, Button, Box } from "@mui/material";
-import ChatLog from "./ChatLog";
+import { Box } from "@mui/material";
+import ChatRoomLog from "./ChatRoomLog";
 import RoomList from "./RoomList";
+import ChatOverlay from "./ChatOverlays/ChatOverlay";
 
-const ChatContainer = styled(Box)(({ theme }) => ({
-	display: "flex",
-	justifyContent: "space-around",
-	alignItems: "center",
-}));
+export const OVERLAYTYPES = {
+	NEWROOM: 0,
+	ROOMDETAILS: 1,
+};
+Object.freeze(OVERLAYTYPES);
 
 const Chat = ({ authUser }) => {
-	const socketInstance = useSocketIO(authUser.getJWT(), socketConnectionError, socketConnectionSuccess);
-	const [socketError, setSocketError] = useState(false); // Socket has any errors?
-	const [socketLoading, setSocketLoading] = useState(true); // Socket still loading?
-	const dataLoadedRef = useRef(false);
+	const socketInstance = useSocketIO(authUser.getJWT(), socketSuccessCB, socketErrorCB);
+	const dataLoadedRef = useRef(false); // Has Initial data been loaded yet?
+	// Overlay
+	const [renderOverlay, setRenderOverlay] = useState(false);
+	const [overlayDetails, setOverlayDetails] = useState({ newRoom: false, roomDetails: false, error: false, errorMessage: "" });
 	// Rooms
 	const [roomObjArray, setRoomObjArray] = useState([]);
-	const [currentRoomName, setCurrentRoomName] = useState(null);
+	const [selectedRoomObj, setSelectedRoomObj] = useState({ name: "" });
 	// ChatLog
 	const [chatLog, setChatLog] = useState({});
 
@@ -32,25 +35,21 @@ const Chat = ({ authUser }) => {
 	}, [ioListenerMessageReceived]);
 	useEffect(() => {
 		// Prevent multiple loading of data
-		if (dataLoadedRef.current || socketLoading) return;
+		if (dataLoadedRef.current || socketInstance.isSocketLoading()) return;
 		fetchInitialData();
 		dataLoadedRef.current = true;
-	}, [socketLoading]);
+	}, [socketInstance.isSocketLoading]);
 
 	/**
-	 * Socket Connection Error callback
+	 * Socket Callbacks
 	 */
 	// Hoisted function
-	function socketConnectionError() {
-		console.log("Socket Connection Error Callback!");
-		setSocketError(true);
-		setSocketLoading(false);
+	function socketErrorCB() {
+		console.log("Socket Error Callback");
 	}
-	function socketConnectionSuccess() {
-		console.log("Socket Connection Success Callback!");
-		setSocketLoading(false);
+	function socketSuccessCB() {
+		console.log("Socket Success Callback");
 	}
-
 	/**
 	 * Fetches required initial data
 	 */
@@ -78,20 +77,17 @@ const Chat = ({ authUser }) => {
 			body: JSON.stringify({ rooms: roomName }),
 		});
 		const messageResultJSON = await result.json();
-		// Set State
-		setRoomObjArray(roomResultJSON.rooms);
-		setCurrentRoomName(roomResultJSON.rooms[0].name);
-		setChatLog(messageResultJSON);
+
+		// Batch setStates
+		ReactDOM.unstable_batchedUpdates(() => {
+			setRoomObjArray(roomResultJSON.rooms);
+			setSelectedRoomObj(roomResultJSON.rooms[0]);
+			setChatLog(messageResultJSON);
+		});
 	};
 
 	/**
-	 * When the current Room changes
-	 * @param {Object} newCurrentRoom New current room
-	 */
-	const onChangeCurrentRoom = (newCurrentRoom) => setCurrentRoomName(newCurrentRoom);
-
-	/**
-	 * Removes a room from roomObjArray State, if found that is
+	 * Helper function remove a room from roomObjArray State, if found,
 	 * @param {String} roomToRemove Name of room to remove
 	 */
 	const removeRoomFromState = (roomToRemove) => {
@@ -102,12 +98,43 @@ const Chat = ({ authUser }) => {
 		setRoomObjArray(newArray);
 		return true;
 	};
+	/**
+	 * When the selected Room changes
+	 * @param {Object} newSelectedRoom New selected room
+	 */
+	const newSelectedRoom = (newSelectedRoom) => setSelectedRoomObj(newSelectedRoom);
 
 	/**
-	 * When want to create new room
+	 * Opens the Overlay for Adding of New Room
+	 * @param {Number} overlayType
+	 */
+	const enableNewRoomOverlay = (overlayType) => {
+		const newOverlayDetail = { newRoom: false, roomDetails: false, error: false, errorMessage: "" };
+		switch (overlayType) {
+			case OVERLAYTYPES.NEWROOM:
+				newOverlayDetail.newRoom = true;
+				break;
+			case OVERLAYTYPES.ROOMDETAILS:
+				newOverlayDetail.roomDetails = true;
+				break;
+		}
+		// Render new Overlay
+		setRenderOverlay(true);
+		setOverlayDetails(newOverlayDetail);
+	};
+	/**
+	 * Closes the Overlay
+	 */
+	const disableOverlay = () => {
+		setRenderOverlay(false);
+		setOverlayDetails({ ...overlayDetails, error: false, errorMessage: "" });
+	};
+
+	/**
+	 * Attempt to create new Room at Server, if successful, update State
 	 * @param {String} newRoomToCreate Name of new room to create
 	 */
-	const onCreateNewRoom = async (newRoomToCreate) => {
+	const createNewRoom = async (newRoomToCreate) => {
 		console.log("RoomToCreate:", newRoomToCreate);
 		let result = await fetch("http://localhost:5000/chat/createnewroom", {
 			method: "POST",
@@ -118,16 +145,15 @@ const Chat = ({ authUser }) => {
 			body: JSON.stringify({ name: newRoomToCreate, firstUsername: authUser.getUsername() }),
 		});
 		const { created, joined, room } = await result.json();
-		// [TODO]:
-		// Not created, maybe can display smth here to show that?
-		// ....
-		if (!joined && !created) return;
+		// Not joined, so definetely not created as well
+		// Show error message
+		if (!joined) {
+			setOverlayDetails({ ...overlayDetails, errorMessage: "Room already joined!", error: true });
+			return;
+		}
 
-		// Join room in Socket, Add room to state
-		if (!joined) return;
+		// Join room in Socket
 		socketInstance.emitEvent("joinroom", { firstTimeJoined: joined, roomName: [room.name] });
-		// Set new room state
-		setRoomObjArray([...roomObjArray, room]);
 		const newChatState = { ...chatLog };
 		let newChatLog = [];
 		// Fetch existing messages from server or empty array
@@ -144,15 +170,23 @@ const Chat = ({ authUser }) => {
 			const messageResultJSON = await result.json();
 			newChatLog = messageResultJSON[room.name];
 		}
-		// Set new Chat state
+		// New Chat State
 		newChatState[room.name] = newChatLog;
-		setChatLog(newChatState);
+
+		// Batch setStates
+		ReactDOM.unstable_batchedUpdates(() => {
+			// Close Overlay
+			disableOverlay();
+			// Add room to state
+			setRoomObjArray([...roomObjArray, room]);
+			setChatLog(newChatState);
+		});
 	};
 	/**
-	 * When want to delete room
+	 * Attempt to delete existing Room at Server, if successful, update State
 	 * @param {String} name Name of room to delete
 	 */
-	const onDeleteRoom = async (name) => {
+	const deleteRoom = async (name) => {
 		const result = await fetch("http://localhost:5000/chat/deleteroom", {
 			method: "POST",
 			headers: {
@@ -167,15 +201,20 @@ const Chat = ({ authUser }) => {
 		if (!resultJSON.room.deletedCount) return;
 		// Leave Socket's room
 		socketInstance.emitEvent("deleteroom", name);
-		// Only Modify state once receive event, not done here
+
+		// Only Modify state once receive event from IO,
+		// Should not modify state here..
+	};
+	const leaveRoom = async (name) => {
+		console.log("Leaving Room:", name);
 	};
 
 	/**
-	 * When user submitting new message
+	 * Emitter function When user submitting new message
 	 * @param {String} content New message to send
 	 */
 	const ioEmitMessage = (content) =>
-		socketInstance.emitEvent("chatmessage", { roomTarget: currentRoomName, content, sender: authUser.getUsername() });
+		socketInstance.emitEvent("chatmessage", { roomTarget: selectedRoomObj.name, content, sender: authUser.getUsername() });
 	/**
 	 * Listener function when receiving new message
 	 * @param {Object} payload Message details
@@ -200,41 +239,48 @@ const Chat = ({ authUser }) => {
 		console.log("DeletingRoom:", name);
 		removeRoomFromState(name);
 		// currentRoom was deleted, return to default room
-		if (currentRoomName === name) setCurrentRoomName(roomObjArray[0].name);
+		if (selectedRoomObj.name === name) setSelectedRoomObj(roomObjArray[0]);
 	}
-
-	/******** Temp ********/
-	const toggleError = () => {
-		setSocketError(!socketError);
-	};
-	/*********************************/
 
 	return (
 		<div>
-			{socketLoading ? (
+			{socketInstance.isSocketLoading() ? (
 				<h1>Socket Loading</h1>
 			) : (
-				<ChatContainer>
-					<RoomList
-						roomArray={roomObjArray}
-						currentRoom={currentRoomName}
-						currentRoomChangedFunc={onChangeCurrentRoom}
-						createNewRoomFunc={onCreateNewRoom}
+				<Box>
+					<ChatOverlay
+						renderOverlay={renderOverlay}
+						overlayDetails={overlayDetails}
+						closeOverlayFunc={disableOverlay}
+						createNewRoomFunc={createNewRoom}
+						handleLogout={authUser.handleLogout}
 					/>
-					<ChatLog chatLog={chatLog[currentRoomName] ? chatLog[currentRoomName] : []} submitFieldValueFunc={ioEmitMessage} />
-				</ChatContainer>
+					<Box sx={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
+						<RoomList
+							roomArray={roomObjArray}
+							selectedRoomName={selectedRoomObj.name}
+							selectedRoomChangedFunc={newSelectedRoom}
+							openNewRoomOverlay={enableNewRoomOverlay}
+						/>
+						<ChatRoomLog
+							chatLog={chatLog[selectedRoomObj.name] ? chatLog[selectedRoomObj.name] : []}
+							selectedRoomObj={selectedRoomObj}
+							openRoomDetailsFunc={enableNewRoomOverlay}
+							submitFieldValueFunc={ioEmitMessage}
+						/>
+					</Box>
+				</Box>
 			)}
+			{/* THIS IS TEMPORARY, FIND A BETTER WAY THAN THIS, or 
+				maybe this is alreayd the best way?? */}
+			{/* [TO SOLVE]: 
+			New messages will not have a dbID yet, so will cause errors... */}
 
-			{authUser.isUserLoggedIn() && (
+			{/* {authUser.isUserLoggedIn() && (
 				<Button onClick={authUser.handleLogout} variant="outlined">
 					Log out
 				</Button>
-			)}
-			<form>
-				<Button onClick={toggleError} variant="outlined">
-					SWICH STATETE
-				</Button>
-			</form>
+			)} */}
 		</div>
 	);
 };

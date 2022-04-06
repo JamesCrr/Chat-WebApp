@@ -4,7 +4,10 @@ import { io } from "socket.io-client";
 // useRef instead of this??
 // Tested when rerendering but was NOT set back to null
 let socketRef = null;
-const useSocketIO = (jwt, errorCallback, connectedCallback) => {
+const useSocketIO = (jwt, connectedCallback, errorCallback) => {
+	const [socketError, setSocketError] = useState(false); // Socket has any errors?
+	const [socketLoading, setSocketLoading] = useState(true); // Socket still loading?
+
 	useEffect(() => {
 		connectSocket();
 		// Prevent memory leak if component was unmounted bfr being called
@@ -18,12 +21,18 @@ const useSocketIO = (jwt, errorCallback, connectedCallback) => {
 	 */
 	const connectSocket = () => {
 		socketRef = io("http://localhost:5000", { auth: { token: jwt } });
-		socketRef.on("connect", connectedCallback);
+		socketRef.on("connect", () => {
+			console.log("SocketIO Connected!");
+			connectedCallback();
+			setSocketError(false);
+			setSocketLoading(false);
+		});
 		socketRef.on("connect_error", (err) => {
 			console.log("SocketIO Connect Error:", err.message);
 			// Disconnect socket and call connection callback
 			errorCallback();
 			disconnectSocket();
+			setSocketError(true);
 		});
 	};
 	/**
@@ -34,6 +43,17 @@ const useSocketIO = (jwt, errorCallback, connectedCallback) => {
 		socketRef.disconnect();
 		socketRef = null;
 	};
+
+	/**
+	 * Returns whether the socket is loading
+	 * @returns socketLoading
+	 */
+	const isSocketLoading = () => socketLoading;
+	/**
+	 * Returns whether the socket has any erros
+	 * @returns socketError
+	 */
+	const isSocketError = () => socketError;
 
 	/**
 	 * Register listener function to SocketIO event
@@ -54,7 +74,7 @@ const useSocketIO = (jwt, errorCallback, connectedCallback) => {
 	 */
 	const emitEvent = (eventName, payload) => socketRef && socketRef.emit(eventName, payload);
 
-	return { unregisterListener, registerListener, emitEvent };
+	return { unregisterListener, registerListener, emitEvent, isSocketError, isSocketLoading };
 };
 
 export default useSocketIO;

@@ -1,22 +1,34 @@
 import { useEffect, useState } from "react";
-import { styled, Box, Typography } from "@mui/material";
+import { styled, Box, Typography, IconButton } from "@mui/material";
+import { useTheme } from "@mui/system";
 
-const RoomListItemContainer = styled(Box)(({ theme }) => ({
-	backgroundColor: "green",
+const RoomListItemContainer = styled(Box)(({ selected, theme }) => ({
+	backgroundColor: selected ? "red" : "green",
 	width: "100%",
-	padding: "1rem",
+	height: "5%",
+	paddingTop: "1rem",
+	paddingBottom: "1rem",
+	display: "flex",
+	justifyContent: "space-between",
+	alignItems: "center",
 }));
 
 const RoomListItem = ({ roomObj, onItemClicked }) => {
 	const [roomDetails, setRoomDetails] = useState(null);
+	const [selected, setSelected] = useState(false);
 
 	useEffect(() => {
 		setRoomDetails(roomObj);
 	}, [roomObj]);
 
+	const onContainerClicked = (e) => {
+		setSelected(!selected);
+		onItemClicked(roomDetails);
+	};
+
 	return (
-		<RoomListItemContainer onClick={() => onItemClicked(roomDetails)}>
-			<Typography>{roomDetails ? roomDetails.name : ""}</Typography>
+		<RoomListItemContainer selected={selected} onClick={onContainerClicked}>
+			<Typography sx={{ marginLeft: "5%" }}>{roomDetails ? roomDetails.name : ""}</Typography>
 		</RoomListItemContainer>
 	);
 };

@@ -1,31 +1,27 @@
-import { styled, Box, TextField } from "@mui/material";
-import { useState } from "react";
+import { styled, Box, Button } from "@mui/material";
 import RoomListItem from "./RoomListItem";
+import { OVERLAYTYPES } from "./Chat";
 
 const RoomListContainer = styled(Box)(({ theme }) => ({
 	height: "100vh",
 	width: "20%",
-}));
-const RoomListParent = styled(Box)(({ theme }) => ({
-	display: "flex",
-	flexDirection: "column",
-	justifyContent: "flex-start",
-	alignItems: "center",
-
-	height: "100vh",
 	overflow: "scroll",
+	background: theme.palette.background.paper,
 
 	/* Hide scrollbar for Chrome, Safari and Opera */
 	"::-webkit-scrollbar": { display: "none" },
 	//  -ms-overflow-style: none;  /* IE and Edge */
 	scrollbarWidth: "none" /* Firefox */,
 }));
-const RoomListTextField = styled(TextField)(({ theme }) => ({
-	width: "100%",
+const RoomListParent = styled(Box)(({ theme }) => ({
+	display: "flex",
+	flexDirection: "column",
+	justifyContent: "flex-start",
+	alignItems: "center",
 }));
 
-const RoomList = ({ roomArray, currentRoomObj, currentRoomChangedFunc, createNewRoomFunc }) => {
-	const [fieldValue, setFieldValue] = useState("");
+const RoomList = ({ roomArray, selectedRoomName, selectedRoomChangedFunc, openNewRoomOverlay }) => {
+	// console.log("RooomList Render", roomArray, currentRoom);
 
 	/**
 	 * When the room list item was clicked
@@ -33,27 +29,16 @@ const RoomList = ({ roomArray, currentRoomObj, currentRoomChangedFunc, createNew
 	 */
 	const onRoomItemClicked = (roomDetails) => {
 		console.log("RoomClicked:", roomDetails.name);
-		currentRoomChangedFunc(roomDetails.name);
-	};
-
-	const onFieldValueChange = (e) => {
-		setFieldValue(e.target.value);
-	};
-	const onFieldValueSubmit = (e) => {
-		e.preventDefault();
-		createNewRoomFunc(fieldValue);
-		setFieldValue("");
+		selectedRoomChangedFunc(roomDetails);
 	};
 
 	return (
 		<RoomListContainer>
+			<Button onClick={() => openNewRoomOverlay(OVERLAYTYPES.NEWROOM)}>Add</Button>
 			<RoomListParent>
 				{roomArray.map((roomObj) => {
-					return <RoomListItem key={Math.random()} roomObj={roomObj} onItemClicked={onRoomItemClicked} />;
+					return <RoomListItem key={roomObj.name} roomObj={roomObj} onItemClicked={onRoomItemClicked} />;
 				})}
-				<form onSubmit={onFieldValueSubmit}>
-					<RoomListTextField value={fieldValue} onChange={onFieldValueChange} variant="outlined" />
-				</form>
 			</RoomListParent>
 		</RoomListContainer>
 	);
