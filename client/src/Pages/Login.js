@@ -42,8 +42,10 @@ const Login = ({ LoginUser }) => {
 	};
 
 	return (
-		<Container>
-			<h1>Login</h1>
+		<Container sx={{ height: "100vh" }}>
+			<Typography sx={{ paddingTop: "2%", paddingBottom: "2%" }} variant="h2">
+				Login
+			</Typography>
 			<Typography variant="h6">Email</Typography>
 			<TextField onChange={onEmailChange} value={email} variant="outlined" />
 			<Typography variant="h6">Password</Typography>

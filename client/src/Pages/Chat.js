@@ -27,10 +27,10 @@ const Chat = ({ authUser }) => {
 	useEffect(() => {
 		// Reregister listener functions to prevent stale state
 		socketInstance.registerListener("receivemessage", ioListenerMessageReceived);
-		socketInstance.registerListener("roomisdeleted", ioListenerDeletedRoom);
+		socketInstance.registerListener("socketleftroom", ioListenerSocketLeftRoom);
 		return () => {
 			socketInstance.unregisterListener("receivemessage", ioListenerMessageReceived);
-			socketInstance.unregisterListener("roomisdeleted", ioListenerDeletedRoom);
+			socketInstance.unregisterListener("socketleftroom", ioListenerSocketLeftRoom);
 		};
 	}, [ioListenerMessageReceived]);
 	useEffect(() => {
@@ -63,10 +63,10 @@ const Chat = ({ authUser }) => {
 		});
 		const roomResultJSON = await result.json();
 		// Inform SocketIO
-		const roomName = roomResultJSON.rooms.map((roomObj) => {
+		const roomNames = roomResultJSON.rooms.map((roomObj) => {
 			return roomObj.name;
 		});
-		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomName });
+		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomNames });
 		// Get messages in all Rooms
 		result = await fetch("http://localhost:5000/chat/myroomsmessages", {
 			method: "POST",
@@ -74,7 +74,7 @@ const Chat = ({ authUser }) => {
 				"Content-Type": "application/json",
 				jwtAuth: authUser.getJWT(),
 			},
-			body: JSON.stringify({ rooms: roomName }),
+			body: JSON.stringify({ rooms: roomNames }),
 		});
 		const messageResultJSON = await result.json();
 
@@ -131,7 +131,7 @@ const Chat = ({ authUser }) => {
 	};
 
 	/**
-	 * Attempt to create new Room at Server, if successful, update State
+	 * Attempt to create new Room at Server, if successful, update State and IOServer
 	 * @param {String} newRoomToCreate Name of new room to create
 	 */
 	const createNewRoom = async (newRoomToCreate) => {
@@ -152,8 +152,7 @@ const Chat = ({ authUser }) => {
 			return;
 		}
 
-		// Join room in Socket
-		socketInstance.emitEvent("joinroom", { firstTimeJoined: joined, roomName: [room.name] });
+		// Prepare for new room
 		const newChatState = { ...chatLog };
 		let newChatLog = [];
 		// Fetch existing messages from server or empty array
@@ -181,9 +180,11 @@ const Chat = ({ authUser }) => {
 			setRoomObjArray([...roomObjArray, room]);
 			setChatLog(newChatState);
 		});
+		// Join room in Socket
+		socketInstance.emitEvent("joinroom", { username: authUser.getUsername(), firstTimeJoined: joined, roomNames: [room.name] });
 	};
 	/**
-	 * Attempt to delete existing Room at Server, if successful, update State
+	 * Attempt to delete existing Room at Server, if successful, update State and IOServer
 	 * @param {String} name Name of room to delete
 	 */
 	const deleteRoom = async (name) => {
@@ -196,21 +197,41 @@ const Chat = ({ authUser }) => {
 			body: JSON.stringify({ name }),
 		});
 		const resultJSON = await result.json();
-		// [TODO]: Error handler, render smth show room was not deleted
+		// [TODO]: Error handler, render smth to show room was not deleted
 		// Was room removed?
 		if (!resultJSON.room.deletedCount) return;
-		// Leave Socket's room
+
+		// Delete Socket's room
 		socketInstance.emitEvent("deleteroom", name);
+		// Close Overlay
+		disableOverlay();
 
 		// Only Modify state once receive event from IO,
-		// Should not modify state here..
+		// Should not be modifying state here
 	};
 	const leaveRoom = async (name) => {
 		console.log("Leaving Room:", name);
+		const result = await fetch("http://localhost:5000/chat/leaveroom", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				jwtAuth: authUser.getJWT(),
+			},
+			body: JSON.stringify({ name, usernameToRemove: authUser.getUsername() }),
+		});
+		const resultJSON = await result.json();
+		// [TODO]: Error handler, render smth to show room was not left
+		// Able to leave room?
+		if (!resultJSON.room.name) return;
+
+		// Leaving Socket's room
+		socketInstance.emitEvent("leaveroom", { roomNames: name, username: authUser.getUsername() });
+		// Close Overlay
+		disableOverlay();
 	};
 
 	/**
-	 * Emitter function When user submitting new message
+	 * Emitter function When socket submitting new message
 	 * @param {String} content New message to send
 	 */
 	const ioEmitMessage = (content) =>
@@ -220,41 +241,46 @@ const Chat = ({ authUser }) => {
 	 * @param {Object} payload Message details
 	 */
 	function ioListenerMessageReceived(payload) {
-		const { roomTarget, sender, content } = payload;
+		const { roomTarget } = payload;
 		console.log("recevied mesage", payload);
-		// Generate new array, push latest message in
+		// Generate new array, push latest message obj in
 		const tempChatLogArray = chatLog[roomTarget].slice();
-		tempChatLogArray.push({ sender, content });
+		tempChatLogArray.push(payload);
 		// Modify state
 		const newChatState = { ...chatLog };
 		newChatState[roomTarget] = tempChatLogArray;
 		setChatLog(newChatState);
 	}
 	/**
-	 * Listener function when room was deleted by someone else
+	 * Listener function when socket left room
 	 * @param {Object} payload
 	 */
-	function ioListenerDeletedRoom(payload) {
-		const { name } = payload;
-		console.log("DeletingRoom:", name);
-		removeRoomFromState(name);
+	function ioListenerSocketLeftRoom(payload) {
+		const { leftRoomName } = payload;
+		console.log("Removing Room from state:", leftRoomName);
+		removeRoomFromState(leftRoomName);
 		// currentRoom was deleted, return to default room
-		if (selectedRoomObj.name === name) setSelectedRoomObj(roomObjArray[0]);
+		if (selectedRoomObj.name === leftRoomName) setSelectedRoomObj(roomObjArray[0]);
 	}
 
+	// Component Props
+	let chatOverlayProps = {
+		renderOverlay,
+		overlayDetails,
+		closeOverlayFunc: disableOverlay,
+		createNewRoomFunc: createNewRoom,
+		deleteRoomFunc: deleteRoom,
+		leaveRoomFunc: leaveRoom,
+		currentRoomName: selectedRoomObj.name,
+		handleLogout: authUser.handleLogout,
+	};
 	return (
 		<div>
 			{socketInstance.isSocketLoading() ? (
 				<h1>Socket Loading</h1>
 			) : (
 				<Box>
-					<ChatOverlay
-						renderOverlay={renderOverlay}
-						overlayDetails={overlayDetails}
-						closeOverlayFunc={disableOverlay}
-						createNewRoomFunc={createNewRoom}
-						handleLogout={authUser.handleLogout}
-					/>
+					<ChatOverlay {...chatOverlayProps} />
 					<Box sx={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
 						<RoomList
 							roomArray={roomObjArray}

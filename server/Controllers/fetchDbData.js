@@ -55,9 +55,9 @@ const fetchRoomsUserIsIn_Names = async (username) => {
 };
 
 /**
- * Fetch all messages of rooms
- * @param {Array} roomName Array of Names of selected rooms
- * @returns Object that contains all messages of selected rooms
+ * Fetch all messages of roomNames
+ * @param {Array} roomNames Array of Names of selected rooms
+ * @returns Object that contains messages of selected rooms in an array
  */
 const fetchMessagesInRooms = async (roomNames) => {
 	const resultMessages = await messageModel.find({ roomTarget: { $in: roomNames } }).lean();
@@ -66,7 +66,11 @@ const fetchMessagesInRooms = async (roomNames) => {
 		roomMessages[element] = [];
 	});
 	resultMessages.map((messageObj) => {
-		roomMessages[messageObj.roomTarget].push({ _dbId: messageObj._id, content: messageObj.content, sender: messageObj.sender });
+		roomMessages[messageObj.roomTarget].push({
+			updatedDateString: messageObj.updatedAt.toJSON(),
+			content: messageObj.content,
+			sender: messageObj.sender,
+		});
 	});
 	return roomMessages;
 };

@@ -68,7 +68,7 @@ const leaveRoom = async (req, res, next) => {
 	const newUserArray = roomUsers.filter((user) => user !== usernameToRemove);
 	const updatedRoomResult = await roomModel.findOneAndUpdate({ name }, { users: newUserArray }, { new: true });
 	// Send updated result
-	res.json({ room: { name: updatedRoomResult.name, users: updatedRoomResult.users } });
+	res.json({ room: { name: updatedRoomResult.name, usersLeft: updatedRoomResult.users } });
 };
 
 module.exports = { fetchMyRooms, fetchRoomsMessages, createNewRoom, deleteRoom, leaveRoom };

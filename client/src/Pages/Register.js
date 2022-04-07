@@ -58,8 +58,10 @@ const Register = () => {
 	};
 
 	return (
-		<Container>
-			<h1>Register</h1>
+		<Container sx={{ height: "100vh" }}>
+			<Typography sx={{ paddingTop: "2%", paddingBottom: "2%" }} variant="h2">
+				Login
+			</Typography>
 			<Typography variant="h6">Username</Typography>
 			<TextField onChange={onUsernameChange} value={username} variant="outlined" />
 			<Typography variant="h6">Email</Typography>

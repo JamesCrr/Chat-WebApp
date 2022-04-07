@@ -7,6 +7,9 @@ const ChatRoomTitleBar = styled(Box)(({ theme }) => ({
 	display: "flex",
 	justifyContent: "space-between",
 	alignItems: "center",
+
+	background: theme.palette.background.paper,
+	transition: `background ${theme.palette.transitionTime}`,
 }));
 const ChatRoomTitleTypography = styled(Typography)(({ theme }) => ({
 	fontWeight: "bold",
@@ -15,11 +18,18 @@ const ChatRoomTitleTypography = styled(Typography)(({ theme }) => ({
 const ChatRoomSettingsIconButton = styled(IconButton)(({ theme }) => ({}));
 const ChatMessageLog = styled(Box)(({ theme }) => ({
 	height: "80vh",
-	overflow: "scroll",
+	overflowY: "scroll",
 	background: theme.palette.background.default,
+	transition: `background ${theme.palette.transitionTime}`,
+	/* Hide scrollbar for Chrome, Safari and Opera */
+	"::-webkit-scrollbar": { display: "none" },
+	msOverflowStyle: "none" /* IE and Edge */,
+	scrollbarWidth: "none" /* Firefox */,
 }));
 const ChatTextField = styled(TextField)(({ theme }) => ({
 	width: "100%",
+	background: theme.palette.background.default,
+	transition: `background ${theme.palette.transitionTime}`,
 	"& .MuiOutlinedInput-root": {
 		height: "10vh",
 	},
@@ -47,16 +57,16 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 
 	/**
 	 * Helper function to render a single chat message
-	 * @param {String} dbId
-	 * @param {String} name
-	 * @param {String} text
+	 * @param {String} key Key for react to render in a list
+	 * @param {String} name	Name of user sending the message
+	 * @param {String} content Content of message
 	 * @returns Component that renders the message
 	 */
-	const renderMessage = (dbId, name, text) => {
+	const renderMessage = (key, name, content) => {
 		return (
-			<Box key={dbId} sx={{ paddingLeft: "1%" }}>
+			<Box key={key} sx={{ paddingLeft: "1%" }}>
 				<Typography variant="h5">{name}:</Typography>
-				<Typography variant="h6">{text}</Typography>
+				<Typography variant="h6">{content}</Typography>
 			</Box>
 		);
 	};
@@ -74,7 +84,9 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 					</svg>
 				</ChatRoomSettingsIconButton>
 			</ChatRoomTitleBar>
-			<ChatMessageLog>{chatLog.map((chatObject) => renderMessage(chatObject._dbId, chatObject.sender, chatObject.content))}</ChatMessageLog>
+			<ChatMessageLog>
+				{chatLog.map((chatObject) => renderMessage(chatObject.sender + chatObject.updatedDateString, chatObject.sender, chatObject.content))}
+			</ChatMessageLog>
 			<form onSubmit={onFieldSubmit}>
 				<ChatTextField onChange={onFieldValueChange} value={fieldValue} variant="outlined" />
 			</form>

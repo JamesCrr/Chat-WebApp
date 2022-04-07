@@ -5,12 +5,13 @@ import { OVERLAYTYPES } from "./Chat";
 const RoomListContainer = styled(Box)(({ theme }) => ({
 	height: "100vh",
 	width: "20%",
-	overflow: "scroll",
+	overflowY: "scroll",
 	background: theme.palette.background.paper,
+	transition: `background ${theme.palette.transitionTime}`,
 
 	/* Hide scrollbar for Chrome, Safari and Opera */
 	"::-webkit-scrollbar": { display: "none" },
-	//  -ms-overflow-style: none;  /* IE and Edge */
+	msOverflowStyle: "none" /* IE and Edge */,
 	scrollbarWidth: "none" /* Firefox */,
 }));
 const RoomListParent = styled(Box)(({ theme }) => ({
