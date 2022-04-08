@@ -14,6 +14,8 @@ const ChatOverlay = ({
 	leaveRoomFunc,
 	currentRoomName,
 	handleLogout,
+	isRoomOwner,
+	ableToLeaveRoom,
 }) => {
 	// Close overlay when clicking background
 	const overlayBackgroundClicked = () => closeOverlayFunc();
@@ -33,7 +35,7 @@ const ChatOverlay = ({
 			handleLogout,
 		};
 		if (overlayDetails.newRoom) return <ChatOverlayNewRoom {...componentProps} />;
-		else if (overlayDetails.roomDetails) return <ChatOverlayRoomDetails {...componentProps} />;
+		else if (overlayDetails.roomDetails) return <ChatOverlayRoomDetails {...{ ...componentProps, isRoomOwner, ableToLeaveRoom }} />;
 		else return <ChatOverlayNewRoom {...componentProps} />;
 	};
 	/**

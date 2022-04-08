@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 const ssjwt = "chatjwt";
+const ssdbid = "chatdbid";
 const ssusername = "chatusername";
 const useAuthHelper = () => {
 	const [username, setUsername] = useState(null);
@@ -9,6 +10,7 @@ const useAuthHelper = () => {
 
 	useEffect(() => {
 		setJwt(sessionStorage.getItem(ssjwt));
+		setDbId(sessionStorage.getItem(ssdbid));
 		setUsername(sessionStorage.getItem(ssusername));
 	}, []);
 
@@ -17,6 +19,7 @@ const useAuthHelper = () => {
 		setDbId(_dbId);
 		setJwt(jwt);
 		sessionStorage.setItem(ssjwt, jwt);
+		sessionStorage.setItem(ssdbid, _dbId);
 		sessionStorage.setItem(ssusername, username);
 	};
 	const handleLogout = () => {
@@ -24,6 +27,7 @@ const useAuthHelper = () => {
 		setDbId(null);
 		setJwt(null);
 		sessionStorage.removeItem(ssjwt);
+		sessionStorage.removeItem(ssdbid);
 		sessionStorage.removeItem(ssusername);
 	};
 

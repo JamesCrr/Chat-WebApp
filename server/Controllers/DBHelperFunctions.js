@@ -7,7 +7,7 @@ const userModel = require("../Models/userModel");
  * Fetch all rooms in databsae
  * @returns Map of rooms
  */
-const fetchRooms = async () => {
+const fetchRooms_Map = async () => {
 	const resultRooms = await roomModel.find({}).lean();
 	// console.log("RoomsFound:", resultRooms.length);
 	const mapOfRooms = new Map();
@@ -46,7 +46,7 @@ const fetchUsers = async () => {
  * @returns Array of Room Objects that user is in
  */
 const fetchRoomsUserIsIn_Names = async (username) => {
-	const mapOfRooms = await fetchRooms();
+	const mapOfRooms = await fetchRooms_Map();
 	const arrayOfUserRooms = [];
 	mapOfRooms.forEach((room, key) => {
 		if (room.users.find((element) => element.toString() === username)) arrayOfUserRooms.push(room);
@@ -75,4 +75,4 @@ const fetchMessagesInRooms = async (roomNames) => {
 	return roomMessages;
 };
 
-module.exports = { fetchRooms, fetchRoomsUserIsIn_Names, fetchMessagesInRooms };
+module.exports = { fetchRoomsUserIsIn_Names, fetchMessagesInRooms };

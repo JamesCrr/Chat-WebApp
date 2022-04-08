@@ -28,9 +28,11 @@ const Chat = ({ authUser }) => {
 		// Reregister listener functions to prevent stale state
 		socketInstance.registerListener("receivemessage", ioListenerMessageReceived);
 		socketInstance.registerListener("socketleftroom", ioListenerSocketLeftRoom);
+		socketInstance.registerListener("updateroomowner", ioListenerUpdateRoomOwner);
 		return () => {
 			socketInstance.unregisterListener("receivemessage", ioListenerMessageReceived);
 			socketInstance.unregisterListener("socketleftroom", ioListenerSocketLeftRoom);
+			socketInstance.unregisterListener("updateroomowner", ioListenerUpdateRoomOwner);
 		};
 	}, [ioListenerMessageReceived]);
 	useEffect(() => {
@@ -142,7 +144,7 @@ const Chat = ({ authUser }) => {
 				"Content-Type": "application/json",
 				jwtAuth: authUser.getJWT(),
 			},
-			body: JSON.stringify({ name: newRoomToCreate, firstUsername: authUser.getUsername() }),
+			body: JSON.stringify({ name: newRoomToCreate, firstUsername: authUser.getUsername(), firstUserDbId: authUser.getDBID() }),
 		});
 		const { created, joined, room } = await result.json();
 		// Not joined, so definetely not created as well
@@ -225,7 +227,7 @@ const Chat = ({ authUser }) => {
 		if (!resultJSON.room.name) return;
 
 		// Leaving Socket's room
-		socketInstance.emitEvent("leaveroom", { roomNames: name, username: authUser.getUsername() });
+		socketInstance.emitEvent("leaveroom", { ownerUpdateObj: resultJSON.room.ownerUpdateObj, roomNames: name, username: authUser.getUsername() });
 		// Close Overlay
 		disableOverlay();
 	};
@@ -260,7 +262,23 @@ const Chat = ({ authUser }) => {
 		console.log("Removing Room from state:", leftRoomName);
 		removeRoomFromState(leftRoomName);
 		// currentRoom was deleted, return to default room
-		if (selectedRoomObj.name === leftRoomName) setSelectedRoomObj(roomObjArray[0]);
+		if (selectedRoomObj.name === leftRoomName) {
+			setSelectedRoomObj(roomObjArray[0]);
+			disableOverlay();
+		}
+	}
+	/**
+	 * Listener function when a room owner changes
+	 * @param {Object} payload
+	 */
+	function ioListenerUpdateRoomOwner(payload) {
+		const { newOwnerDbId, roomName } = payload;
+		console.log("Room [" + roomName + "] got new Owner: " + newOwnerDbId);
+		const newArray = [...roomObjArray];
+		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
+		// Change owner of room and Update State
+		newArray[roomIndex].owner = newOwnerDbId;
+		setRoomObjArray(newArray);
 	}
 
 	// Component Props
@@ -273,6 +291,8 @@ const Chat = ({ authUser }) => {
 		leaveRoomFunc: leaveRoom,
 		currentRoomName: selectedRoomObj.name,
 		handleLogout: authUser.handleLogout,
+		isRoomOwner: selectedRoomObj.owner === authUser.getDBID(),
+		ableToLeaveRoom: selectedRoomObj.name === "main" ? false : true,
 	};
 	return (
 		<div>

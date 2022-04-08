@@ -45,7 +45,7 @@ module.exports = (ioServer) => {
 	};
 	const leaveRoom = function (payload) {
 		const socket = this;
-		let { username, roomNames } = payload;
+		let { username, roomNames, ownerUpdateObj } = payload;
 		// Convert string to array
 		if (typeof roomNames === "string") roomNames = [roomNames];
 		// Leave rooms provided in roomNames
@@ -53,19 +53,21 @@ module.exports = (ioServer) => {
 			console.log(socket.id, "Leaving Room:", roomNames[i]);
 			// Leave room
 			socket.leave(roomNames[i]);
-			// Emit leaving message for other sockets in Room
+			// Emit to all, leaving message of socket in Room
 			ioServer.in(roomNames[i]).emit("receivemessage", {
 				updatedDateString: new Date().toJSON(),
 				roomTarget: roomNames[i],
 				sender: "SERVER",
 				content: `${username} left the Room!`,
 			});
-			// Emit left room to individual socket
+			// Emit to all, update owner of room
+			if (ownerUpdateObj.modified) ioServer.in(roomNames[i]).emit("updateroomowner", { ...ownerUpdateObj, roomName: roomNames[i] });
+			// Emit event to individual socket that left
 			socket.emit("socketleftroom", { leftRoomName: roomNames[i] });
 		}
 	};
 	const deleteRoom = function (payload) {
-		// Emit final event
+		// Emit to all, final event
 		ioServer.in(payload).emit("socketleftroom", { leftRoomName: payload });
 		// Make all sockets leave room
 		ioServer.socketsLeave(payload);

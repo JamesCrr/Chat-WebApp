@@ -84,12 +84,12 @@ const RoomDetailDangerProperty = styled(Paper)(({ theme }) => ({
 
 	padding: "3%",
 }));
-const RoomDetailsDangerButton = styled(Button)(({ theme }) => ({
+const RoomDetailsDangerButton = styled(Button)(({ disabled, theme }) => ({
 	backgroundColor: "#1c040426",
 	display: "inline-block",
 	float: "right",
 	border: `1px solid ${theme.palette.error.dark}`,
-	boxShadow: " rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px",
+	boxShadow: disabled ? "" : " rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px",
 }));
 
 export {

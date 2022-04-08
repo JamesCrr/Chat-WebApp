@@ -9,7 +9,7 @@ import {
 } from "./ChatOverlayStyles";
 import { materialContext } from "../../App";
 
-const ChatOverlayRoomDetails = ({ overlayDetails, ownDeleteRoomFunc, ownLeaveRoomFunc, handleLogout }) => {
+const ChatOverlayRoomDetails = ({ overlayDetails, ownDeleteRoomFunc, ownLeaveRoomFunc, handleLogout, isRoomOwner, ableToLeaveRoom }) => {
 	const { setAppearanceToDark } = useContext(materialContext);
 	const theme = useTheme();
 	const [darkMode, setDarkMode] = useState(theme.palette.mode === "dark" ? true : false);
@@ -40,7 +40,7 @@ const ChatOverlayRoomDetails = ({ overlayDetails, ownDeleteRoomFunc, ownLeaveRoo
 							<Typography variant="h5">Leave Room</Typography>
 							<Typography variant="subtitle2">Leaving, but you can always return</Typography>
 						</Box>
-						<RoomDetailsDangerButton color="error" variant="outlined" onClick={ownLeaveRoomFunc}>
+						<RoomDetailsDangerButton color="error" variant="outlined" onClick={ownLeaveRoomFunc} disabled={!ableToLeaveRoom}>
 							Leave Room
 						</RoomDetailsDangerButton>
 					</RoomDetailDangerProperty>
@@ -49,7 +49,7 @@ const ChatOverlayRoomDetails = ({ overlayDetails, ownDeleteRoomFunc, ownLeaveRoo
 							<Typography variant="h5">Delete Room</Typography>
 							<Typography variant="subtitle2">Kick everyone out and say goodbye!</Typography>
 						</Box>
-						<RoomDetailsDangerButton color="error" variant="outlined" onClick={ownDeleteRoomFunc}>
+						<RoomDetailsDangerButton color="error" variant="outlined" onClick={ownDeleteRoomFunc} disabled={!isRoomOwner}>
 							Delete Room
 						</RoomDetailsDangerButton>
 					</RoomDetailDangerProperty>
