@@ -12,7 +12,7 @@ const ChatOverlay = ({
 	createNewRoomFunc,
 	deleteRoomFunc,
 	leaveRoomFunc,
-	currentRoomName,
+	currentRoomObj,
 	handleLogout,
 	isRoomOwner,
 	ableToLeaveRoom,
@@ -29,13 +29,13 @@ const ChatOverlay = ({
 	const whichOverlayToRender = () => {
 		const componentProps = {
 			overlayDetails,
-			ownDeleteRoomFunc: () => deleteRoomFunc(currentRoomName),
-			ownLeaveRoomFunc: () => leaveRoomFunc(currentRoomName),
+			ownDeleteRoomFunc: () => deleteRoomFunc(currentRoomObj.name),
+			ownLeaveRoomFunc: () => leaveRoomFunc(currentRoomObj.name),
 			createNewRoomFunc,
 			handleLogout,
 		};
 		if (overlayDetails.newRoom) return <ChatOverlayNewRoom {...componentProps} />;
-		else if (overlayDetails.roomDetails) return <ChatOverlayRoomDetails {...{ ...componentProps, isRoomOwner, ableToLeaveRoom }} />;
+		else if (overlayDetails.roomDetails) return <ChatOverlayRoomDetails {...{ ...componentProps, currentRoomObj, isRoomOwner, ableToLeaveRoom }} />;
 		else return <ChatOverlayNewRoom {...componentProps} />;
 	};
 	/**

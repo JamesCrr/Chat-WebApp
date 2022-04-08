@@ -35,20 +35,21 @@ const createNewRoom = async (req, res, next) => {
 		if (roomDocument.users.length > 0)
 			roomDocument.users.find((element) => element.toLowerCase() === firstUsername.toLowerCase()) ? (joined = false) : (joined = true);
 		else {
-			// Make user new Owner as first user to rejoin empty room
-			roomDocument.owner = new mongoose.Types.ObjectId(firstUserDbId);
+			// Set New Owner as no users in created room
+			roomDocument.owner = firstUsername;
+			// roomDocument.owner = new mongoose.Types.ObjectId(firstUserDbId);
 			joined = true;
 		}
 
 		if (joined) {
-			// Update DB if joining room
+			// Update users array
 			roomDocument.users = [...roomDocument.users, firstUsername];
 			await roomDocument.save();
 		}
 	} else {
 		// Create new room
 		created = true;
-		roomDocument = await roomModel.create({ name, users: [firstUsername], owner: new mongoose.Types.ObjectId(firstUserDbId) });
+		roomDocument = await roomModel.create({ name, users: [firstUsername], owner: firstUsername });
 	}
 	res.json({ created, joined, room: { owner: roomDocument.owner, name: roomDocument.name, users: roomDocument.users } });
 };
@@ -77,14 +78,14 @@ const leaveRoom = async (req, res, next) => {
 	const newUserArray = roomUsers.filter((user) => user !== usernameToRemove);
 	const updatedRoomResult = await roomModel.findOneAndUpdate({ name }, { users: newUserArray }, { new: true });
 
-	// Find last user in room, make user owner
-	let ownerUpdateObj = { modified: false, newOwnerDbId: "" };
+	// Find last user in room, make that user the owner
+	let ownerUpdateObj = { modified: false, newOwnerusername: "" };
 	if (updatedRoomResult.users.length === 1) {
 		const userDoc = await userModel.findOne({ username: updatedRoomResult.users[0] }).lean();
-		updatedRoomResult.owner = userDoc._id;
+		updatedRoomResult.owner = userDoc.username;
 		await updatedRoomResult.save();
 		// Take note of new owner, send back with result
-		ownerUpdateObj = { modified: true, newOwnerDbId: userDoc._id };
+		ownerUpdateObj = { modified: true, newOwnerusername: userDoc.username };
 	}
 
 	// Send updated result

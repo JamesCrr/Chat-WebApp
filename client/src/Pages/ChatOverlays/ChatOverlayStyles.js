@@ -1,4 +1,4 @@
-import { styled, Box, Paper, Container, Card, Button, Typography, IconButton } from "@mui/material";
+import { styled, Box, Paper, Container, Card, Button, Typography, IconButton, Stack } from "@mui/material";
 
 const OverlayBox = styled(Box)(({ theme }) => ({
 	position: "absolute",
@@ -62,7 +62,7 @@ const RoomDetailsContentBox = styled(Box)(({ theme }) => ({
 	msOverflowStyle: "none" /* IE and Edge */,
 	scrollbarWidth: "none" /* Firefox */,
 }));
-const AppearanceSettings = styled(Paper)(({ theme }) => ({
+const AppearanceParent = styled(Paper)(({ theme }) => ({
 	textAlign: "left",
 	width: "80%",
 	marginTop: "2%",
@@ -73,6 +73,13 @@ const AppearanceSettings = styled(Paper)(({ theme }) => ({
 
 	background: theme.palette.background.paper,
 }));
+const MembersParent = styled(Stack)(({ theme }) => ({
+	width: "80%",
+	marginTop: "2%",
+}));
+const MembersItem = styled(Paper)(({ theme }) => ({
+	border: "none",
+}));
 const RoomDetailsDangerZone = styled(Paper)(({ theme }) => ({
 	width: "70%",
 	border: `3px solid ${theme.palette.error.dark}`,
@@ -81,7 +88,6 @@ const RoomDetailsDangerZone = styled(Paper)(({ theme }) => ({
 }));
 const RoomDetailDangerProperty = styled(Paper)(({ theme }) => ({
 	textAlign: "left",
-
 	padding: "3%",
 }));
 const RoomDetailsDangerButton = styled(Button)(({ disabled, theme }) => ({
@@ -99,7 +105,9 @@ export {
 	AddNewRoomContentBox,
 	ErrorTypography,
 	RoomDetailsContentBox,
-	AppearanceSettings,
+	AppearanceParent,
+	MembersParent,
+	MembersItem,
 	RoomDetailsDangerZone,
 	RoomDetailDangerProperty,
 	RoomDetailsDangerButton,

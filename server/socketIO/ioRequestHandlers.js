@@ -16,7 +16,7 @@ module.exports = (ioServer) => {
 		 * fetching from DB even though same message object
 		 */
 		const updatedDateString = new Date().toJSON();
-		// Emit event
+		// Emit all room users
 		ioServer.in(roomTarget).emit("receivemessage", { updatedDateString, roomTarget, sender, content });
 		// Send to DB
 		// addMessageToDb(content, sender, roomTarget);
@@ -36,10 +36,13 @@ module.exports = (ioServer) => {
 				const updatedDateString = new Date().toJSON();
 				// Wait a little before emitting message
 				setTimeout(() => {
+					// Emit all room users, Welcome message
 					ioServer
 						.in(roomNames[i])
 						.emit("receivemessage", { updatedDateString, roomTarget: roomNames[i], sender: "SERVER", content: `${username} joined the Room!` });
 				}, 100);
+				// Emit to other room users
+				socket.to(roomNames[i]).emit("othersocketjoinedleftroom", { joined: true, roomName: roomNames[i], username });
 			}
 		}
 	};
@@ -53,21 +56,23 @@ module.exports = (ioServer) => {
 			console.log(socket.id, "Leaving Room:", roomNames[i]);
 			// Leave room
 			socket.leave(roomNames[i]);
-			// Emit to all, leaving message of socket in Room
+			// Emit all room users, leaving message of socket in Room
 			ioServer.in(roomNames[i]).emit("receivemessage", {
 				updatedDateString: new Date().toJSON(),
 				roomTarget: roomNames[i],
 				sender: "SERVER",
 				content: `${username} left the Room!`,
 			});
-			// Emit to all, update owner of room
+			// Emit other room users
+			socket.to(roomNames[i]).emit("othersocketjoinedleftroom", { joined: false, roomName: roomNames[i], username });
+			// Emit all room users, update owner of room
 			if (ownerUpdateObj.modified) ioServer.in(roomNames[i]).emit("updateroomowner", { ...ownerUpdateObj, roomName: roomNames[i] });
-			// Emit event to individual socket that left
+			// Emit individual socket that left
 			socket.emit("socketleftroom", { leftRoomName: roomNames[i] });
 		}
 	};
 	const deleteRoom = function (payload) {
-		// Emit to all, final event
+		// Emit all room users, final event
 		ioServer.in(payload).emit("socketleftroom", { leftRoomName: payload });
 		// Make all sockets leave room
 		ioServer.socketsLeave(payload);

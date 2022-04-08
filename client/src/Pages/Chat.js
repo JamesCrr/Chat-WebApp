@@ -29,10 +29,12 @@ const Chat = ({ authUser }) => {
 		socketInstance.registerListener("receivemessage", ioListenerMessageReceived);
 		socketInstance.registerListener("socketleftroom", ioListenerSocketLeftRoom);
 		socketInstance.registerListener("updateroomowner", ioListenerUpdateRoomOwner);
+		socketInstance.registerListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
 		return () => {
 			socketInstance.unregisterListener("receivemessage", ioListenerMessageReceived);
 			socketInstance.unregisterListener("socketleftroom", ioListenerSocketLeftRoom);
 			socketInstance.unregisterListener("updateroomowner", ioListenerUpdateRoomOwner);
+			socketInstance.unregisterListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
 		};
 	}, [ioListenerMessageReceived]);
 	useEffect(() => {
@@ -68,7 +70,7 @@ const Chat = ({ authUser }) => {
 		const roomNames = roomResultJSON.rooms.map((roomObj) => {
 			return roomObj.name;
 		});
-		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomNames });
+		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomNames, username: authUser.getUsername() });
 		// Get messages in all Rooms
 		result = await fetch("http://localhost:5000/chat/myroomsmessages", {
 			method: "POST",
@@ -133,7 +135,7 @@ const Chat = ({ authUser }) => {
 	};
 
 	/**
-	 * Attempt to create new Room at Server, if successful, update State and IOServer
+	 * Attempt to create/join new Room at Server, if successful, update State and IOServer
 	 * @param {String} newRoomToCreate Name of new room to create
 	 */
 	const createNewRoom = async (newRoomToCreate) => {
@@ -228,8 +230,10 @@ const Chat = ({ authUser }) => {
 
 		// Leaving Socket's room
 		socketInstance.emitEvent("leaveroom", { ownerUpdateObj: resultJSON.room.ownerUpdateObj, roomNames: name, username: authUser.getUsername() });
-		// Close Overlay
-		disableOverlay();
+		ReactDOM.unstable_batchedUpdates(() => {
+			// Close Overlay
+			disableOverlay();
+		});
 	};
 
 	/**
@@ -254,7 +258,7 @@ const Chat = ({ authUser }) => {
 		setChatLog(newChatState);
 	}
 	/**
-	 * Listener function when socket left room
+	 * Listener function when this socket left a room
 	 * @param {Object} payload
 	 */
 	function ioListenerSocketLeftRoom(payload) {
@@ -268,16 +272,35 @@ const Chat = ({ authUser }) => {
 		}
 	}
 	/**
+	 * Listener function when OTHER sockets Joined/Left a room
+	 * @param {Object} payload
+	 */
+	function ioListenerOtherSocketJoinedLeftRoom(payload) {
+		const { joined, roomName, username } = payload;
+		console.log(username + (joined ? " joining " : " leaving ") + roomName);
+		// Find the room to modify
+		const newArray = [...roomObjArray];
+		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
+		// User join room or leaving room
+		if (joined) newArray[roomIndex].users.push(username);
+		else {
+			const userIndex = newArray[roomIndex].users.findIndex((arrayName) => arrayName.toLowerCase() === username);
+			newArray[roomIndex].users.splice(userIndex, 1);
+		}
+		// Update state
+		setRoomObjArray(newArray);
+	}
+	/**
 	 * Listener function when a room owner changes
 	 * @param {Object} payload
 	 */
 	function ioListenerUpdateRoomOwner(payload) {
-		const { newOwnerDbId, roomName } = payload;
-		console.log("Room [" + roomName + "] got new Owner: " + newOwnerDbId);
+		const { newOwnerusername, roomName } = payload;
+		console.log("Room [" + roomName + "] got new Owner: " + newOwnerusername);
 		const newArray = [...roomObjArray];
 		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
 		// Change owner of room and Update State
-		newArray[roomIndex].owner = newOwnerDbId;
+		newArray[roomIndex].owner = newOwnerusername;
 		setRoomObjArray(newArray);
 	}
 
@@ -289,9 +312,10 @@ const Chat = ({ authUser }) => {
 		createNewRoomFunc: createNewRoom,
 		deleteRoomFunc: deleteRoom,
 		leaveRoomFunc: leaveRoom,
-		currentRoomName: selectedRoomObj.name,
+		currentRoomObj: selectedRoomObj,
 		handleLogout: authUser.handleLogout,
-		isRoomOwner: selectedRoomObj.owner === authUser.getDBID(),
+		isRoomOwner: selectedRoomObj.owner === authUser.getUsername(),
+		roomOwnerName: selectedRoomObj.owner,
 		ableToLeaveRoom: selectedRoomObj.name === "main" ? false : true,
 	};
 	return (
@@ -317,16 +341,6 @@ const Chat = ({ authUser }) => {
 					</Box>
 				</Box>
 			)}
-			{/* THIS IS TEMPORARY, FIND A BETTER WAY THAN THIS, or 
-				maybe this is alreayd the best way?? */}
-			{/* [TO SOLVE]: 
-			New messages will not have a dbID yet, so will cause errors... */}
-
-			{/* {authUser.isUserLoggedIn() && (
-				<Button onClick={authUser.handleLogout} variant="outlined">
-					Log out
-				</Button>
-			)} */}
 		</div>
 	);
 };
