@@ -6,12 +6,17 @@ const { fetchRoomsUserIsIn_Names, fetchMessagesInRooms } = require("./DBHelperFu
 
 const fetchMyRooms = async (req, res, next) => {
 	const username = req.get("username");
+	const roomName = req.get("roomName"); // Targeted room to look for?
 	if (!username) return next("No Username Found");
 	// Get all associated rooms and send back
 	const rooms = await fetchRoomsUserIsIn_Names(username);
-	const filteredRooms = rooms.map((room) => {
-		return { owner: room.owner, name: room.name, users: room.users };
-	});
+	let filteredRooms = !roomName
+		? rooms.map((room) => {
+				return { owner: room.owner, name: room.name, users: room.users };
+		  })
+		: rooms.find((room) => room.name === roomName);
+	// Convert undefined to null
+	filteredRooms = filteredRooms ? filteredRooms : null;
 	res.json({ rooms: filteredRooms });
 };
 
@@ -74,19 +79,18 @@ const leaveRoom = async (req, res, next) => {
 	// Is user in room to begin with
 	const roomUsers = roomFoundResult.users;
 	if (roomUsers.findIndex((user) => user === usernameToRemove) === -1) return next("User not in room to begin with, Unable to remove");
-	// Remove user from room, update DB
+	// Remove user from room
 	const newUserArray = roomUsers.filter((user) => user !== usernameToRemove);
-	const updatedRoomResult = await roomModel.findOneAndUpdate({ name }, { users: newUserArray }, { new: true });
 
-	// Find last user in room, make that user the owner
-	let ownerUpdateObj = { modified: false, newOwnerusername: "" };
-	if (updatedRoomResult.users.length === 1) {
-		const userDoc = await userModel.findOne({ username: updatedRoomResult.users[0] }).lean();
-		updatedRoomResult.owner = userDoc.username;
-		await updatedRoomResult.save();
-		// Take note of new owner, send back with result
-		ownerUpdateObj = { modified: true, newOwnerusername: userDoc.username };
-	}
+	// Owner left, set new owner to first member of new Array
+	let ownerUpdateObj = { modified: false, newOwnerusername: roomFoundResult.owner };
+	if (newUserArray.length === 1 || roomFoundResult.owner === usernameToRemove) ownerUpdateObj = { modified: true, newOwnerusername: newUserArray[0] };
+	// Update DB
+	const updatedRoomResult = await roomModel.findOneAndUpdate(
+		{ name },
+		{ owner: ownerUpdateObj.newOwnerusername, users: newUserArray },
+		{ new: true }
+	);
 
 	// Send updated result
 	res.json({ room: { ownerUpdateObj, name: updatedRoomResult.name, usersLeft: updatedRoomResult.users } });

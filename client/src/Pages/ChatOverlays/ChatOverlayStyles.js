@@ -1,4 +1,4 @@
-import { styled, Box, Paper, Container, Card, Button, Typography, IconButton, Stack } from "@mui/material";
+import { styled, Box, Paper, Button, Typography, IconButton, Stack } from "@mui/material";
 
 const OverlayBox = styled(Box)(({ theme }) => ({
 	position: "absolute",
@@ -22,10 +22,9 @@ const CloseOverlayButton = styled(IconButton)(({ theme }) => ({
 	border: "2.5px solid red",
 	borderRadius: "30px",
 	padding: "1px",
-	background: "rgba(255, 255, 255)",
+	background: theme.palette.background.default,
 	transition: "box-shadow 0.3s ease-out",
 	":hover": {
-		background: "rgba(235, 235, 235)",
 		boxShadow: "0px 8px 20px -7px grey",
 	},
 }));
@@ -62,23 +61,27 @@ const RoomDetailsContentBox = styled(Box)(({ theme }) => ({
 	msOverflowStyle: "none" /* IE and Edge */,
 	scrollbarWidth: "none" /* Firefox */,
 }));
-const AppearanceParent = styled(Paper)(({ theme }) => ({
+const MembersContainer = styled(Paper)(({ theme }) => ({
+	background: theme.palette.background.paper,
+	boxShadow: "none",
 	textAlign: "left",
 	width: "80%",
 	marginTop: "2%",
-	padding: "3%",
-	display: "flex",
-	justifyContent: "space-between",
-	alignItems: "center",
-
-	background: theme.palette.background.paper,
 }));
-const MembersParent = styled(Stack)(({ theme }) => ({
-	width: "80%",
-	marginTop: "2%",
+const MembersTitleContainer = styled(Paper)(({ theme }) => ({
+	background: theme.palette.background.default,
+	boxShadow: "none",
+	borderBottom: `1px ${theme.palette.text.primary} solid`,
+	borderRadius: "4px 4px 0px 0px",
+	padding: "5px",
+}));
+const MembersListParent = styled(Stack)(({ theme }) => ({
+	background: theme.palette.background.default,
 }));
 const MembersItem = styled(Paper)(({ theme }) => ({
 	border: "none",
+	padding: "5px",
+	paddingLeft: "10px",
 }));
 const RoomDetailsDangerZone = styled(Paper)(({ theme }) => ({
 	width: "70%",
@@ -105,8 +108,9 @@ export {
 	AddNewRoomContentBox,
 	ErrorTypography,
 	RoomDetailsContentBox,
-	AppearanceParent,
-	MembersParent,
+	MembersContainer,
+	MembersTitleContainer,
+	MembersListParent,
 	MembersItem,
 	RoomDetailsDangerZone,
 	RoomDetailDangerProperty,

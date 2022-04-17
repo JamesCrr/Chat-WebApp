@@ -1,27 +1,19 @@
-import { useContext, useState } from "react";
-import { Box, Button, Switch, Typography, useTheme } from "@mui/material";
+import { useState } from "react";
+import { Box, Button, Paper, Tooltip, Typography } from "@mui/material";
 import {
 	RoomDetailsContentBox,
 	RoomDetailsDangerZone,
-	AppearanceParent,
-	MembersParent,
+	MembersContainer,
+	MembersTitleContainer,
+	MembersListParent,
 	MembersItem,
 	RoomDetailDangerProperty,
 	RoomDetailsDangerButton,
 } from "./ChatOverlayStyles";
-import { materialContext } from "../../App";
 
 const ChatOverlayRoomDetails = (props) => {
-	const { setAppearanceToDark } = useContext(materialContext);
-	const theme = useTheme();
-	const [darkMode, setDarkMode] = useState(theme.palette.mode === "dark" ? true : false);
-
-	const onAppearanceSwitchChanged = (e) => {
-		// Swap the appearance
-		const newDarkMode = theme.palette.mode === "dark" ? false : true;
-		setAppearanceToDark(newDarkMode);
-		setDarkMode(newDarkMode);
-	};
+	const [toolTipOpen, setToolTipOpen] = useState(false);
+	const toggleToolTip = (e) => setToolTipOpen(!toolTipOpen);
 
 	return (
 		<>
@@ -29,19 +21,32 @@ const ChatOverlayRoomDetails = (props) => {
 				Settings
 			</Typography>
 			<RoomDetailsContentBox>
-				<AppearanceParent elevation={3}>
-					<Box sx={{ display: "inline" }}>
-						<Typography variant="h5">Appearance</Typography>
-						<Typography variant="subtitle2">Dark Mode</Typography>
-					</Box>
-					<Switch checked={darkMode} onChange={onAppearanceSwitchChanged} />
-				</AppearanceParent>
-				<MembersParent direction="column" alignItems="stretch" justifyContent="flex-start" spacing={0.5}>
-					{props.currentRoomObj.users.map((username) => {
-						console.log("Renderin:", username);
-						return <MembersItem key={username}>{username}</MembersItem>;
-					})}
-				</MembersParent>
+				<MembersContainer>
+					<MembersTitleContainer>
+						<Typography sx={{ fontWeight: "bold" }} variant="h5">
+							Room Members
+						</Typography>
+					</MembersTitleContainer>
+					<MembersListParent direction="column" alignItems="stretch" justifyContent="flex-start" spacing={0.5}>
+						{props.currentRoomObj.users.map((username) => {
+							return username === props.roomOwnerName ? (
+								<MembersItem key={username} sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
+									<Typography sx={{ marginRight: "1%" }}>{username}</Typography>
+									<Tooltip title="Admin" open={toolTipOpen} onClick={toggleToolTip} onClose={toggleToolTip} arrow>
+										<svg style={{ width: "24px", height: "24px" }} viewBox="0 0 24 24">
+											<path
+												fill="currentColor"
+												d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z"
+											/>
+										</svg>
+									</Tooltip>
+								</MembersItem>
+							) : (
+								<MembersItem key={username}>{username}</MembersItem>
+							);
+						})}
+					</MembersListParent>
+				</MembersContainer>
 				<RoomDetailsDangerZone elevation={3}>
 					<RoomDetailDangerProperty variant="outlined" square>
 						<Box sx={{ display: "inline-block" }}>

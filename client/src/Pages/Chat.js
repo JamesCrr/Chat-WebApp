@@ -30,11 +30,14 @@ const Chat = ({ authUser }) => {
 		socketInstance.registerListener("socketleftroom", ioListenerSocketLeftRoom);
 		socketInstance.registerListener("updateroomowner", ioListenerUpdateRoomOwner);
 		socketInstance.registerListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
+		socketInstance.registerListener("refreshroomusersarray", ioListenerRefreshRoomUsersArray);
+		//
 		return () => {
 			socketInstance.unregisterListener("receivemessage", ioListenerMessageReceived);
 			socketInstance.unregisterListener("socketleftroom", ioListenerSocketLeftRoom);
 			socketInstance.unregisterListener("updateroomowner", ioListenerUpdateRoomOwner);
 			socketInstance.unregisterListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
+			socketInstance.unregisterListener("refreshroomusersarray", ioListenerRefreshRoomUsersArray);
 		};
 	}, [ioListenerMessageReceived]);
 	useEffect(() => {
@@ -66,10 +69,10 @@ const Chat = ({ authUser }) => {
 			},
 		});
 		const roomResultJSON = await result.json();
-		// Inform SocketIO
 		const roomNames = roomResultJSON.rooms.map((roomObj) => {
 			return roomObj.name;
 		});
+		// Register those rooms in SocketIO
 		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomNames, username: authUser.getUsername() });
 		// Get messages in all Rooms
 		result = await fetch("http://localhost:5000/chat/myroomsmessages", {
@@ -81,6 +84,12 @@ const Chat = ({ authUser }) => {
 			body: JSON.stringify({ rooms: roomNames }),
 		});
 		const messageResultJSON = await result.json();
+		/**
+		 * - No other work around avaliable, so have to send when first logging in.
+		 * - When NEW user login for the very first time and need to let other users
+		 * know about this in the room list, only update main room since, new user can only join that
+		 **/
+		socketInstance.emitEvent("toserver_refreshroomusersarray", { roomName: "main" });
 
 		// Batch setStates
 		ReactDOM.unstable_batchedUpdates(() => {
@@ -272,7 +281,7 @@ const Chat = ({ authUser }) => {
 		}
 	}
 	/**
-	 * Listener function when OTHER sockets Joined/Left a room
+	 * Listener function when OTHER socket Joined/Left a room
 	 * @param {Object} payload
 	 */
 	function ioListenerOtherSocketJoinedLeftRoom(payload) {
@@ -301,6 +310,29 @@ const Chat = ({ authUser }) => {
 		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
 		// Change owner of room and Update State
 		newArray[roomIndex].owner = newOwnerusername;
+		setRoomObjArray(newArray);
+	}
+	/**
+	 * Listener function to refresh room users array
+	 * @param {Object} payload
+	 */
+	async function ioListenerRefreshRoomUsersArray(payload) {
+		const { roomName } = payload;
+		// Get data from MongoDB
+		let result = await fetch("http://localhost:5000/chat/myrooms", {
+			headers: {
+				username: authUser.getUsername(),
+				roomName: roomName,
+				jwtAuth: authUser.getJWT(),
+			},
+		});
+		const roomResultJSON = await result.json();
+		const newUsersArray = roomResultJSON.rooms.users;
+		console.log("Room [" + roomName + "] refreshing users array: " + newUsersArray);
+		const newArray = [...roomObjArray];
+		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
+		// Change owner of room and Update State
+		newArray[roomIndex].users = newUsersArray;
 		setRoomObjArray(newArray);
 	}
 

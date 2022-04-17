@@ -1,4 +1,5 @@
 const userModel = require("../Models/userModel");
+const roomModel = require("../Models/roomModel");
 
 const AttemptLogin = async (req, res, next) => {
 	const { email, password } = req.body;
@@ -20,10 +21,14 @@ const AttemptRegister = async (req, res, next) => {
 		// convert the username toLowerCase for easier checking
 		let result = await userModel.findOne({ $or: [{ username: { $regex: new RegExp(`^${username}$`, "i") } }, { email }] });
 		if (result) throw new Error("Username or email already taken");
-		// Register new user into DB
-		// [TODO]: Uncomment this before deploying!
-		// [TODO]: Add user to main room user array in CB function!
+		// // Register new user into DB
+		// // [TODO]: Uncomment this before deploying!
 		// const userDocument = await userModel.create({ username, email, password });
+
+		// // Add new user to main room
+		// result = await roomModel.findOne({ deletable: false });
+		// result.users.push(username);
+		// await result.save(); // Save to MongoDB
 	} catch (error) {
 		return next(error.message);
 	}

@@ -77,6 +77,12 @@ module.exports = (ioServer) => {
 		// Make all sockets leave room
 		ioServer.socketsLeave(payload);
 	};
+	const refreshRoomUsersArray = function (payload) {
+		const socket = this;
+		const { roomName } = payload;
+		// Emit to other room users to refresh the room user array
+		socket.to(roomName).emit("refreshroomusersarray", payload);
+	};
 
-	return { chatMessage, joinRoom, leaveRoom, deleteRoom };
+	return { chatMessage, joinRoom, leaveRoom, deleteRoom, refreshRoomUsersArray };
 };
