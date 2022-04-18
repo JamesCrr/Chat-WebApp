@@ -32,6 +32,8 @@ const Login = ({ LoginUser }) => {
 			const { username, _dbId, token } = data;
 			LoginUser(username, _dbId, token);
 		} catch (error) {
+			// [TODO]:
+			// Display errors to user instead of console logging
 			console.log(error);
 		}
 	};

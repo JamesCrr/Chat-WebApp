@@ -1,6 +1,6 @@
 import { styled, Box, Button } from "@mui/material";
 import RoomListItem from "./RoomListItem";
-import { OVERLAYTYPES } from "./Chat";
+import { OVERLAYTYPES } from "../ChattingApp";
 
 const RoomListContainer = styled(Box)(({ theme }) => ({
 	height: "100vh",

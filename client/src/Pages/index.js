@@ -1,8 +1,6 @@
-import Login from "./Login";
-import Chat from "./Chat";
+import Login from "./Auth/Login";
+import Chat from "./ChattingApp";
 import NotFound from "./NotFound";
-import Store from "./Store";
-import Navbar from "./Navbar";
-import Register from "./Register";
+import Register from "./Auth/Register";
 
-export { Login, Chat, NotFound, Store, Navbar, Register };
+export { Login, Chat, NotFound, Register };

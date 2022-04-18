@@ -68,6 +68,7 @@ const fetchMessagesInRooms = async (roomNames) => {
 	resultMessages.map((messageObj) => {
 		roomMessages[messageObj.roomTarget].push({
 			updatedDateString: messageObj.updatedAt.toJSON(),
+			createdDateString: messageObj.createdAt.toJSON(),
 			content: messageObj.content,
 			sender: messageObj.sender,
 		});

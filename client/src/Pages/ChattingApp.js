@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import useSocketIO from "../SocketIO/useSocketIO";
 import { Box } from "@mui/material";
-import ChatRoomLog from "./ChatRoomLog";
-import RoomList from "./RoomList";
-import ChatOverlay from "./ChatOverlays/ChatOverlay";
+import ChatRoomLog from "./Chat/ChatRoomLog";
+import RoomList from "./RoomList/RoomList";
+import ChatOverlay from "./Chat/ChatOverlays/ChatOverlay";
+import AppOverlay from "./ChattingAppOverlay";
 
 export const OVERLAYTYPES = {
 	NEWROOM: 0,
@@ -14,7 +15,9 @@ Object.freeze(OVERLAYTYPES);
 
 const Chat = ({ authUser }) => {
 	const socketInstance = useSocketIO(authUser.getJWT(), socketSuccessCB, socketErrorCB);
-	const dataLoadedRef = useRef(false); // Has Initial data been loaded yet?
+	// Data Loading
+	const [dataLoaded, setDataLoaded] = useState(false); // Initial data fully loaded yet?
+	const dataLoadedBeforeRef = useRef(false); // Initial data been loaded before?
 	// Overlay
 	const [renderOverlay, setRenderOverlay] = useState(false);
 	const [overlayDetails, setOverlayDetails] = useState({ newRoom: false, roomDetails: false, error: false, errorMessage: "" });
@@ -42,9 +45,9 @@ const Chat = ({ authUser }) => {
 	}, [ioListenerMessageReceived]);
 	useEffect(() => {
 		// Prevent multiple loading of data
-		if (dataLoadedRef.current || socketInstance.isSocketLoading()) return;
+		if (dataLoadedBeforeRef.current || socketInstance.isSocketLoading()) return;
 		fetchInitialData();
-		dataLoadedRef.current = true;
+		dataLoadedBeforeRef.current = true;
 	}, [socketInstance.isSocketLoading]);
 
 	/**
@@ -96,7 +99,15 @@ const Chat = ({ authUser }) => {
 			setRoomObjArray(roomResultJSON.rooms);
 			setSelectedRoomObj(roomResultJSON.rooms[0]);
 			setChatLog(messageResultJSON);
+			setDataLoaded(true);
 		});
+	};
+	/**
+	 * Checks for both SocketIO and MongoDB if still loading
+	 * @returns True => data still loading, False => data is no longer loading	 */
+	const isDataStillLoading = () => {
+		if (socketInstance.isSocketLoading() || !dataLoaded) return true;
+		return false;
 	};
 
 	/**
@@ -149,14 +160,20 @@ const Chat = ({ authUser }) => {
 	 */
 	const createNewRoom = async (newRoomToCreate) => {
 		console.log("RoomToCreate:", newRoomToCreate);
-		let result = await fetch("http://localhost:5000/chat/createnewroom", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				jwtAuth: authUser.getJWT(),
-			},
-			body: JSON.stringify({ name: newRoomToCreate, firstUsername: authUser.getUsername(), firstUserDbId: authUser.getDBID() }),
-		});
+		let result;
+		try {
+			result = await fetch("http://localhost:5000/chat/createnewroom", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					jwtAuth: authUser.getJWT(),
+				},
+				body: JSON.stringify({ name: newRoomToCreate, firstUsername: authUser.getUsername(), firstUserDbId: authUser.getDBID() }),
+			});
+		} catch (error) {
+			console.log(error);
+			return;
+		}
 		const { created, joined, room } = await result.json();
 		// Not joined, so definetely not created as well
 		// Show error message
@@ -352,9 +369,8 @@ const Chat = ({ authUser }) => {
 	};
 	return (
 		<div>
-			{socketInstance.isSocketLoading() ? (
-				<h1>Socket Loading</h1>
-			) : (
+			<AppOverlay logOutFunc={authUser.handleLogout} loading={isDataStillLoading()} error={socketInstance.isSocketError()} />
+			{dataLoaded && (
 				<Box>
 					<ChatOverlay {...chatOverlayProps} />
 					<Box sx={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>

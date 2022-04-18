@@ -1,7 +1,7 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { styled, Paper, Typography, TextField, useTheme, IconButton } from "@mui/material";
-import { materialContext } from "../App";
-import { OVERLAYTYPES } from "./Chat";
+import { materialContext } from "../../App";
+import { OVERLAYTYPES } from "../ChattingApp";
 
 const ChatRoomTitleBar = styled(Paper)(({ theme }) => ({
 	height: "10vh",
@@ -54,13 +54,33 @@ const ChatTextField = styled(TextField)(({ theme }) => ({
 	},
 }));
 
+/**
+ * Returns the date's time in 12HR formatted String
+ * @param {Date} dateObject
+ * @returns String that reprents time in 12HR format
+ */
+const getAMPMTimeString = (dateObject) => {
+	let hours = dateObject.getHours();
+	let ampm = hours < 12 ? "am" : "pm";
+	hours = hours % 12;
+	hours = hours ? hours : "12"; // the hour '0' should be '12'
+	let minutes = dateObject.getMinutes();
+	let minutesString = minutes < 10 ? "0" + minutes : minutes;
+	return hours + ":" + minutes + " " + ampm;
+};
 const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFieldValueFunc }) => {
-	// console.log("ChatRoomLog Render", chatLog);
-	const theme = useTheme();
 	const [fieldValue, setFieldValue] = useState("");
+	// Scroll to bottom of messages
+	const chatLogEndRef = useRef();
 	// Appearance Settings
+	const theme = useTheme();
 	const { setAppearanceToDark } = useContext(materialContext);
 	const [darkMode, setDarkMode] = useState(theme.palette.mode === "dark" ? true : false);
+
+	// Whenever chatLog changes
+	useEffect(() => {
+		chatLogEndRef.current.scrollIntoView({ behavior: "auto", block: "end" });
+	}, [chatLog]);
 
 	/**
 	 * Field value changes
@@ -77,9 +97,9 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 	};
 
 	/**
-	 * Appearance value changes
+	 * Appearance Button was pressed
 	 */
-	const onAppearanceChange = (e) => {
+	const onAppearanceButtonPressed = (e) => {
 		// Swap the appearance
 		const newDarkMode = theme.palette.mode === "dark" ? false : true;
 		setAppearanceToDark(newDarkMode);
@@ -88,16 +108,21 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 
 	/**
 	 * Helper function to render a single chat message
-	 * @param {String} key Key for react to render in a list
 	 * @param {String} name	Name of user sending the message
 	 * @param {String} content Content of message
+	 * @param {String} createdDateString Created Date of message in STRING format
+	 * @param {String} updatedDateString Updated Date of message in STRING format
 	 * @returns Component that renders the message
 	 */
-	const renderMessage = (key, name, content) => {
+	const renderMessage = (name, content, createdDateString, updatedDateString) => {
+		const dateObject = new Date(createdDateString);
 		return (
-			<Paper key={key} sx={{ paddingLeft: "1%", background: "none", boxShadow: "none" }}>
+			<Paper key={name + updatedDateString} sx={{ paddingLeft: "1%", paddingRight: "1%", background: "none", boxShadow: "none" }}>
 				<Typography variant="h5">{name}:</Typography>
-				<Typography variant="h6">{content}</Typography>
+				<Paper sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", boxShadow: "none" }}>
+					<Typography variant="h6">{content}</Typography>
+					<Typography variant="7">{getAMPMTimeString(dateObject)}</Typography>
+				</Paper>
 			</Paper>
 		);
 	};
@@ -107,7 +132,7 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 			<ChatRoomTitleBar>
 				<ChatRoomTitleTypography variant="h4">{selectedRoomObj.name}</ChatRoomTitleTypography>
 				<IconButtonsContainer>
-					<ToggleThemeAppearanceIconButton onClick={onAppearanceChange}>
+					<ToggleThemeAppearanceIconButton onClick={onAppearanceButtonPressed}>
 						<Paper sx={{ width: "24px", height: "24px", boxShadow: "none", background: "none" }}>
 							<ThemeLightIcon>
 								<svg style={{ width: "24px", height: "24px" }} viewBox="0 0 24 24">
@@ -138,7 +163,10 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 				</IconButtonsContainer>
 			</ChatRoomTitleBar>
 			<ChatMessageLog>
-				{chatLog.map((chatObject) => renderMessage(chatObject.sender + chatObject.updatedDateString, chatObject.sender, chatObject.content))}
+				{chatLog.map((chatObject) =>
+					renderMessage(chatObject.sender, chatObject.content, chatObject.createdDateString, chatObject.updatedDateString)
+				)}
+				<div ref={chatLogEndRef} />
 			</ChatMessageLog>
 			<form onSubmit={onFieldSubmit}>
 				<ChatTextField onChange={onFieldValueChange} value={fieldValue} variant="outlined" />

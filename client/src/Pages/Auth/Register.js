@@ -27,6 +27,7 @@ const Register = () => {
 	const handleRegistering = async () => {
 		// [TODO]:
 		// Validate data bfr sending..
+		// username cannot be server!!
 		try {
 			const res = await fetch("http://localhost:5000/auth/register", {
 				method: "POST",
@@ -43,6 +44,8 @@ const Register = () => {
 			// [TODO]:
 			// Check for SERVER Error flag, Render error message or smth..
 		} catch (error) {
+			// [TODO]:
+			// Display errors to user instead of console logging
 			console.log(error);
 			return;
 		}

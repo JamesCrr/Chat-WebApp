@@ -1,13 +1,12 @@
-const mongoose = require("mongoose");
+const { BadRequestError } = require("../Errors");
 const messageModel = require("../Models/messageModel");
 const roomModel = require("../Models/roomModel");
-const userModel = require("../Models/userModel");
 const { fetchRoomsUserIsIn_Names, fetchMessagesInRooms } = require("./DBHelperFunctions");
 
 const fetchMyRooms = async (req, res, next) => {
 	const username = req.get("username");
 	const roomName = req.get("roomName"); // Targeted room to look for?
-	if (!username) return next("No Username Found");
+	if (!username) return next(new BadRequestError("Username not valid!"));
 	// Get all associated rooms and send back
 	const rooms = await fetchRoomsUserIsIn_Names(username);
 	let filteredRooms = !roomName
@@ -22,7 +21,7 @@ const fetchMyRooms = async (req, res, next) => {
 
 const fetchRoomsMessages = async (req, res, next) => {
 	let { rooms } = req.body;
-	if (!rooms || rooms.length === 0) return next("No target rooms found");
+	if (!rooms || rooms.length === 0) return next(new BadRequestError("No target rooms found"));
 	if (typeof rooms === "string") rooms = [rooms];
 	const messages = await fetchMessagesInRooms(rooms);
 	res.json(messages);
@@ -30,7 +29,7 @@ const fetchRoomsMessages = async (req, res, next) => {
 
 const createNewRoom = async (req, res, next) => {
 	const { name, firstUsername, firstUserDbId } = req.body;
-	if (!name || !firstUsername || !firstUserDbId) return next("Unable to create/join room. Invalid room details");
+	if (!name || !firstUsername || !firstUserDbId) return next(new BadRequestError("Unable to create/join room. Invalid room details"));
 	let created = false; // Was room created or fetched
 	let joined = true; // Did user join the room
 	let roomDocument = await roomModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
@@ -61,10 +60,10 @@ const createNewRoom = async (req, res, next) => {
 
 const deleteRoom = async (req, res, next) => {
 	const { name } = req.body;
-	if (!name) return next("Unable to delete room, Invalid room details");
+	if (!name) return next(new BadRequestError("Unable to delete room, Invalid room details"));
 	// Delete room
 	const roomDeleteResult = await roomModel.deleteOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, deletable: true });
-	if (roomDeleteResult.deletedCount < 1) return next("No Room deleted, check again!");
+	if (roomDeleteResult.deletedCount < 1) return next(new BadRequestError("No Room was deleted, check again!"));
 	// Also delete messages of deleted room
 	const messageDeleteResult = await messageModel.deleteMany({ roomTarget: { $regex: new RegExp(`^${name}$`, "i") } });
 	res.json({ room: roomDeleteResult, messages: messageDeleteResult });
@@ -72,13 +71,14 @@ const deleteRoom = async (req, res, next) => {
 
 const leaveRoom = async (req, res, next) => {
 	const { name, usernameToRemove } = req.body;
-	if (!name || !usernameToRemove) return next("Unable to leave room, Invalid room details");
+	if (!name || !usernameToRemove) return next(new BadRequestError("Unable to leave room, Invalid room details"));
 	// Does room exist
 	const roomFoundResult = await roomModel.findOne({ name }).lean();
-	if (!roomFoundResult) return next("Room not found, Invalid room details");
+	if (!roomFoundResult) return next(new BadRequestError("Room not found, Invalid room details"));
 	// Is user in room to begin with
 	const roomUsers = roomFoundResult.users;
-	if (roomUsers.findIndex((user) => user === usernameToRemove) === -1) return next("User not in room to begin with, Unable to remove");
+	if (roomUsers.findIndex((user) => user === usernameToRemove) === -1)
+		return next(new BadRequestError("User not in room to begin with, Unable to remove"));
 	// Remove user from room
 	const newUserArray = roomUsers.filter((user) => user !== usernameToRemove);
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { styled, Box, Typography, IconButton } from "@mui/material";
-import { useTheme } from "@mui/system";
+import { styled, Box, Typography } from "@mui/material";
 
 const RoomListItemContainer = styled(Box)(({ selected, theme }) => ({
 	backgroundColor: selected ? "red" : "green",

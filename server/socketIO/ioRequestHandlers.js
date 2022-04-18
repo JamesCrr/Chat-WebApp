@@ -17,7 +17,7 @@ module.exports = (ioServer) => {
 		 */
 		const updatedDateString = new Date().toJSON();
 		// Emit all room users
-		ioServer.in(roomTarget).emit("receivemessage", { updatedDateString, roomTarget, sender, content });
+		ioServer.in(roomTarget).emit("receivemessage", { createdDateString: updatedDateString, updatedDateString, roomTarget, sender, content });
 		// Send to DB
 		// addMessageToDb(content, sender, roomTarget);
 	};
