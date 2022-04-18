@@ -1,6 +1,14 @@
 import React, { useState } from "react";
-import { Button, Container, TextField, Typography } from "@mui/material";
+import { styled, Button, Container, TextField, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
+import AppearanceToggleBar from "./AppearanceToggleBar";
+
+const LoginBackground = styled(Container)(({ theme }) => ({
+	height: "100vh",
+	minWidth: "100vw",
+	background: theme.palette.background.default,
+}));
+const LoginContainer = styled(Container)(({ theme }) => ({}));
 
 // [TODO]:
 // Have loading animation for Heroku Startup timing, gonna take awhile
@@ -44,23 +52,26 @@ const Login = ({ LoginUser }) => {
 	};
 
 	return (
-		<Container sx={{ height: "100vh" }}>
-			<Typography sx={{ paddingTop: "2%", paddingBottom: "2%" }} variant="h2">
-				Login
-			</Typography>
-			<Typography variant="h6">Email</Typography>
-			<TextField onChange={onEmailChange} value={email} variant="outlined" />
-			<Typography variant="h6">Password</Typography>
-			<TextField onChange={onPasswordChange} value={password} variant="outlined" />
-			<form>
-				<Button variant="outlined" onClick={onSubmitButton}>
+		<LoginBackground>
+			<LoginContainer>
+				<AppearanceToggleBar />
+				<Typography sx={{ paddingTop: "2%", paddingBottom: "2%" }} variant="h2">
 					Login
-				</Button>
-			</form>
-			<Typography variant="p">
-				<Link to="/register">Register Instead</Link>
-			</Typography>
-		</Container>
+				</Typography>
+				<Typography variant="h6">Email</Typography>
+				<TextField onChange={onEmailChange} value={email} variant="outlined" />
+				<Typography variant="h6">Password</Typography>
+				<TextField onChange={onPasswordChange} value={password} variant="outlined" />
+				<form>
+					<Button variant="outlined" onClick={onSubmitButton}>
+						Login
+					</Button>
+				</form>
+				<Typography variant="p">
+					<Link to="/register">Register Instead</Link>
+				</Typography>
+			</LoginContainer>
+		</LoginBackground>
 	);
 };
 

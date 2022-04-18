@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Container, TextField, Typography } from "@mui/material";
+import { styled, Button, Container, TextField, Typography } from "@mui/material";
+import AppearanceToggleBar from "./AppearanceToggleBar";
+
+const RegisterBackground = styled(Container)(({ theme }) => ({
+	height: "100vh",
+	minWidth: "100vw",
+	background: theme.palette.background.default,
+}));
+const RegisterContainer = styled(Container)(({ theme }) => ({}));
 
 // [TODO]:
 // Have loading animation for Heroku Startup timing, gonna take awhile
@@ -61,26 +69,29 @@ const Register = () => {
 	};
 
 	return (
-		<Container sx={{ height: "100vh" }}>
-			<Typography sx={{ paddingTop: "2%", paddingBottom: "2%" }} variant="h2">
-				Login
-			</Typography>
-			<Typography variant="h6">Username</Typography>
-			<TextField onChange={onUsernameChange} value={username} variant="outlined" />
-			<Typography variant="h6">Email</Typography>
-			<TextField onChange={onEmailChange} value={email} variant="outlined" />
-			<Typography variant="h6">Password</Typography>
-			<TextField onChange={onPasswordChange} value={password} variant="outlined" />
-
-			<form>
-				<Button variant="outlined" onClick={onSubmitButton}>
+		<RegisterBackground>
+			<RegisterContainer>
+				<AppearanceToggleBar />
+				<Typography sx={{ paddingTop: "2%", paddingBottom: "2%" }} variant="h2">
 					Register
-				</Button>
-			</form>
-			<Typography variant="p">
-				<Link to="/login">Login Instead</Link>
-			</Typography>
-		</Container>
+				</Typography>
+				<Typography variant="h6">Username</Typography>
+				<TextField onChange={onUsernameChange} value={username} variant="outlined" />
+				<Typography variant="h6">Email</Typography>
+				<TextField onChange={onEmailChange} value={email} variant="outlined" />
+				<Typography variant="h6">Password</Typography>
+				<TextField onChange={onPasswordChange} value={password} variant="outlined" />
+
+				<form>
+					<Button variant="outlined" onClick={onSubmitButton}>
+						Register
+					</Button>
+				</form>
+				<Typography variant="p">
+					<Link to="/login">Login Instead</Link>
+				</Typography>
+			</RegisterContainer>
+		</RegisterBackground>
 	);
 };
 
