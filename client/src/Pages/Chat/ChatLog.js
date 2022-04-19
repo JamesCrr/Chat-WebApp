@@ -1,8 +1,9 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { styled, Paper, Typography, TextField, useTheme, IconButton } from "@mui/material";
+import { styled, useTheme, Paper, Divider, Chip, Typography, TextField, IconButton } from "@mui/material";
 import { materialContext } from "../../App";
 import { OVERLAYTYPES } from "../ChattingApp";
 import DarkLightIconButton from "../DarkLightIconButton";
+import ChatLogMessage from "./ChatLogMessage";
 
 const ChatRoomTitleBar = styled(Paper)(({ theme }) => ({
 	height: "10vh",
@@ -54,10 +55,47 @@ const getAMPMTimeString = (dateObject) => {
 	let minutesString = minutes < 10 ? "0" + minutes : minutes;
 	return hours + ":" + minutes + " " + ampm;
 };
+/**
+ * Returns the month name
+ * @param {Number} monthIndex
+ * @returns Name of month that correspondes to the index
+ */
+const getMonthNameString = (monthIndex) => {
+	switch (monthIndex) {
+		case 0:
+			return "January";
+		case 1:
+			return "February";
+		case 2:
+			return "March";
+		case 3:
+			return "April";
+		case 4:
+			return "May";
+		case 5:
+			return "June";
+		case 6:
+			return "July";
+		case 7:
+			return "August";
+		case 8:
+			return "September";
+		case 9:
+			return "October";
+		case 10:
+			return "November";
+		case 11:
+		default:
+			return "December";
+	}
+};
+
 const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFieldValueFunc }) => {
+	// Input Field
 	const [fieldValue, setFieldValue] = useState("");
-	// Scroll to bottom of messages
-	const chatLogEndRef = useRef();
+	// Chatlog
+	let chatLogLastDate = null;
+	const chatLogEndRef = useRef(); // Scroll to bottom of messages
 	// Appearance Settings
 	const theme = useTheme();
 	const { setAppearanceToDark } = useContext(materialContext);
@@ -102,13 +140,23 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 	 */
 	const renderMessage = (name, content, createdDateString, updatedDateString) => {
 		const dateObject = new Date(createdDateString);
+		const componentKey = name + updatedDateString;
+		const messageComponent = <ChatLogMessage key={componentKey} name={name} content={content} timeString={getAMPMTimeString(dateObject)} />;
+		// Need insert Date divider bfr rendering message
+		const sameDate = chatLogLastDate ? chatLogLastDate.getDate() === dateObject.getDate() : false;
+		if (sameDate) {
+			const sameMonth = chatLogLastDate ? chatLogLastDate.getMonth() === dateObject.getMonth() : false;
+			const sameYear = chatLogLastDate ? chatLogLastDate.getFullYear() === dateObject.getFullYear() : false;
+			if (sameMonth && sameYear) return messageComponent;
+		}
+		// Track latest date
+		chatLogLastDate = dateObject;
 		return (
-			<Paper key={name + updatedDateString} sx={{ paddingLeft: "1%", paddingRight: "1%", background: "none", boxShadow: "none" }}>
-				<Typography variant="h5">{name}:</Typography>
-				<Paper sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", boxShadow: "none" }}>
-					<Typography variant="h6">{content}</Typography>
-					<Typography variant="7">{getAMPMTimeString(dateObject)}</Typography>
-				</Paper>
+			<Paper key={componentKey} sx={{ background: "none", boxShadow: "none", borderRadius: "0px" }}>
+				<Divider>
+					<Chip label={`${dateObject.getDate()} ${getMonthNameString(dateObject.getMonth())} ${dateObject.getFullYear()}`} />
+				</Divider>
+				{messageComponent}
 			</Paper>
 		);
 	};

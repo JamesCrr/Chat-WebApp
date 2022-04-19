@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import useSocketIO from "../SocketIO/useSocketIO";
 import { Box } from "@mui/material";
-import ChatRoomLog from "./Chat/ChatRoomLog";
+import ChatRoomLog from "./Chat/ChatLog";
 import RoomList from "./RoomList/RoomList";
 import ChatOverlay from "./Chat/ChatOverlays/ChatOverlay";
-import AppOverlay from "./ChattingAppOverlay";
+import AppOverlay from "./Chat/ChatOverlays/ChatOverlayLoadingAndError";
 
 export const OVERLAYTYPES = {
 	NEWROOM: 0,
@@ -22,21 +22,23 @@ const Chat = ({ authUser }) => {
 	const [renderOverlay, setRenderOverlay] = useState(false);
 	const [overlayDetails, setOverlayDetails] = useState({ newRoom: false, roomDetails: false, error: false, errorMessage: "" });
 	// Rooms
-	const [roomObjArray, setRoomObjArray] = useState([]);
+	const [roomObjMap, setRoomObjMap] = useState(new Map());
 	const [selectedRoomObj, setSelectedRoomObj] = useState({ name: "" });
+	const [unreadMessagesMap, setUnreadMessagesMap] = useState(new Map());
 	// ChatLog
 	const [chatLog, setChatLog] = useState({});
 
 	useEffect(() => {
 		// Reregister listener functions to prevent stale state
 		socketInstance.registerListener("receivemessage", ioListenerMessageReceived);
+		socketInstance.registerListener("receiveservermessage", ioListenerSERVERMessageReceived);
 		socketInstance.registerListener("socketleftroom", ioListenerSocketLeftRoom);
 		socketInstance.registerListener("updateroomowner", ioListenerUpdateRoomOwner);
 		socketInstance.registerListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
 		socketInstance.registerListener("refreshroomusersarray", ioListenerRefreshRoomUsersArray);
-		//
 		return () => {
 			socketInstance.unregisterListener("receivemessage", ioListenerMessageReceived);
+			socketInstance.unregisterListener("receiveservermessage", ioListenerSERVERMessageReceived);
 			socketInstance.unregisterListener("socketleftroom", ioListenerSocketLeftRoom);
 			socketInstance.unregisterListener("updateroomowner", ioListenerUpdateRoomOwner);
 			socketInstance.unregisterListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
@@ -96,8 +98,12 @@ const Chat = ({ authUser }) => {
 
 		// Batch setStates
 		ReactDOM.unstable_batchedUpdates(() => {
-			setRoomObjArray(roomResultJSON.rooms);
-			setSelectedRoomObj(roomResultJSON.rooms[0]);
+			const newMap = new Map();
+			for (let i = 0; i < roomResultJSON.rooms.length; i++) {
+				newMap.set(roomResultJSON.rooms[i].name, roomResultJSON.rooms[i]);
+			}
+			setRoomObjMap(newMap);
+			setSelectedRoomObj(newMap.values().next().value);
 			setChatLog(messageResultJSON);
 			setDataLoaded(true);
 		});
@@ -111,22 +117,54 @@ const Chat = ({ authUser }) => {
 	};
 
 	/**
-	 * Helper function remove a room from roomObjArray State, if found,
+	 * Helper function remove a room from roomObjMap State, if found,
 	 * @param {String} roomToRemove Name of room to remove
+	 * @returns True => room was removed, False => remove did not occur
 	 */
 	const removeRoomFromState = (roomToRemove) => {
-		const newArray = [...roomObjArray];
-		const removeIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomToRemove.toLowerCase());
-		if (removeIndex < 0) return false;
-		newArray.splice(removeIndex, 1);
-		setRoomObjArray(newArray);
-		return true;
+		const newMap = new Map(roomObjMap);
+		const result = newMap.delete(roomToRemove);
+		setRoomObjMap(newMap);
+		return result;
+	};
+	/**
+	 * Helper function to remove value from unreadMessagesMap
+	 * @param {String} roomNameToRemove Name of unread message's room to remove
+	 */
+	const removeUnreadMessageCountFromState = (roomNameToRemove) => {
+		const newMap = new Map(unreadMessagesMap);
+		newMap.delete(roomNameToRemove);
+		setUnreadMessagesMap(newMap);
+	};
+	/**
+	 * Helper function to add a new message into ChatLog State
+	 * @param {Object} messageObject Message Object
+	 */
+	const addMessageToState = (messageObject) => {
+		// Generate new array, push latest message obj in
+		const roomName = messageObject.roomTarget;
+		const tempChatLogArray = chatLog[roomName].slice();
+		tempChatLogArray.push(messageObject);
+		const newChatState = { ...chatLog };
+		newChatState[roomName] = tempChatLogArray;
+		setChatLog(newChatState);
+		// Message belongs to other room?
+		if (roomName !== selectedRoomObj.name) {
+			const newMap = new Map(unreadMessagesMap);
+			let unreadCount = newMap.has(roomName) ? newMap.get(roomName) + 1 : 1;
+			newMap.set(roomName, unreadCount);
+			setUnreadMessagesMap(newMap);
+		}
 	};
 	/**
 	 * When the selected Room changes
 	 * @param {Object} newSelectedRoom New selected room
 	 */
-	const newSelectedRoom = (newSelectedRoom) => setSelectedRoomObj(newSelectedRoom);
+	const newSelectedRoom = (newSelectedRoom) => {
+		setSelectedRoomObj(newSelectedRoom);
+		// Remove unread messages of new selected room
+		removeUnreadMessageCountFromState(newSelectedRoom.name);
+	};
 
 	/**
 	 * Opens the Overlay for Adding of New Room
@@ -153,7 +191,6 @@ const Chat = ({ authUser }) => {
 		setRenderOverlay(false);
 		setOverlayDetails({ ...overlayDetails, error: false, errorMessage: "" });
 	};
-
 	/**
 	 * Attempt to create/join new Room at Server, if successful, update State and IOServer
 	 * @param {String} newRoomToCreate Name of new room to create
@@ -203,11 +240,14 @@ const Chat = ({ authUser }) => {
 		newChatState[room.name] = newChatLog;
 
 		// Batch setStates
+		// Update state immediately as no IO server callback required
 		ReactDOM.unstable_batchedUpdates(() => {
 			// Close Overlay
 			disableOverlay();
 			// Add room to state
-			setRoomObjArray([...roomObjArray, room]);
+			const newMap = new Map(roomObjMap);
+			newMap.set(room.name, room);
+			setRoomObjMap(newMap);
 			setChatLog(newChatState);
 		});
 		// Join room in Socket
@@ -233,10 +273,8 @@ const Chat = ({ authUser }) => {
 
 		// Delete Socket's room
 		socketInstance.emitEvent("deleteroom", name);
-		// Close Overlay
-		disableOverlay();
 
-		// Only Modify state once receive event from IO,
+		// Only Modify state once receive event callback from IO,
 		// Should not be modifying state here
 	};
 	const leaveRoom = async (name) => {
@@ -256,10 +294,8 @@ const Chat = ({ authUser }) => {
 
 		// Leaving Socket's room
 		socketInstance.emitEvent("leaveroom", { ownerUpdateObj: resultJSON.room.ownerUpdateObj, roomNames: name, username: authUser.getUsername() });
-		ReactDOM.unstable_batchedUpdates(() => {
-			// Close Overlay
-			disableOverlay();
-		});
+
+		// Only Modify state once receive event callback from IO
 	};
 
 	/**
@@ -273,27 +309,36 @@ const Chat = ({ authUser }) => {
 	 * @param {Object} payload Message details
 	 */
 	function ioListenerMessageReceived(payload) {
-		const { roomTarget } = payload;
-		console.log("recevied mesage", payload);
-		// Generate new array, push latest message obj in
-		const tempChatLogArray = chatLog[roomTarget].slice();
-		tempChatLogArray.push(payload);
-		// Modify state
-		const newChatState = { ...chatLog };
-		newChatState[roomTarget] = tempChatLogArray;
-		setChatLog(newChatState);
+		console.log("recevied message", payload);
+		addMessageToState(payload);
 	}
 	/**
-	 * Listener function when this socket left a room
+	 * Listener function when receiving new SERVER message
+	 * @param {Object} payload Message details
+	 */
+	function ioListenerSERVERMessageReceived(payload) {
+		console.log("received SERVER message", payload);
+		// Set the message date, as the timing from the server
+		// might be different
+		const currentDateString = new Date().toJSON();
+		const newPayload = { ...payload, createdDateString: currentDateString, updatedDateString: currentDateString };
+		addMessageToState(newPayload);
+	}
+	/**
+	 * Listener function when this socket leaves a room he is part of,
+	 * may not always be done by ownself (ex: room owner deletes the room, while user in other room)
 	 * @param {Object} payload
 	 */
 	function ioListenerSocketLeftRoom(payload) {
 		const { leftRoomName } = payload;
 		console.log("Removing Room from state:", leftRoomName);
+		// Remove room from state
 		removeRoomFromState(leftRoomName);
+		removeUnreadMessageCountFromState(leftRoomName);
+
 		// currentRoom was deleted, return to default room
 		if (selectedRoomObj.name === leftRoomName) {
-			setSelectedRoomObj(roomObjArray[0]);
+			setSelectedRoomObj(roomObjMap.values().next().value);
 			disableOverlay();
 		}
 	}
@@ -305,16 +350,16 @@ const Chat = ({ authUser }) => {
 		const { joined, roomName, username } = payload;
 		console.log(username + (joined ? " joining " : " leaving ") + roomName);
 		// Find the room to modify
-		const newArray = [...roomObjArray];
-		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
+		const newMap = new Map(roomObjMap);
+		const roomToModify = newMap.get(roomName);
 		// User join room or leaving room
-		if (joined) newArray[roomIndex].users.push(username);
+		if (joined) roomToModify.users.push(username);
 		else {
-			const userIndex = newArray[roomIndex].users.findIndex((arrayName) => arrayName.toLowerCase() === username);
-			newArray[roomIndex].users.splice(userIndex, 1);
+			const userIndex = roomToModify.users.findIndex((nameInArray) => nameInArray.toLowerCase() === username.toLowerCase());
+			roomToModify.users.splice(userIndex, 1);
 		}
 		// Update state
-		setRoomObjArray(newArray);
+		setRoomObjMap(newMap);
 	}
 	/**
 	 * Listener function when a room owner changes
@@ -323,11 +368,10 @@ const Chat = ({ authUser }) => {
 	function ioListenerUpdateRoomOwner(payload) {
 		const { newOwnerusername, roomName } = payload;
 		console.log("Room [" + roomName + "] got new Owner: " + newOwnerusername);
-		const newArray = [...roomObjArray];
-		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
 		// Change owner of room and Update State
-		newArray[roomIndex].owner = newOwnerusername;
-		setRoomObjArray(newArray);
+		const newMap = new Map(roomObjMap);
+		newMap.get(roomName).owner = newOwnerusername;
+		setRoomObjMap(newMap);
 	}
 	/**
 	 * Listener function to refresh room users array
@@ -346,11 +390,10 @@ const Chat = ({ authUser }) => {
 		const roomResultJSON = await result.json();
 		const newUsersArray = roomResultJSON.rooms.users;
 		console.log("Room [" + roomName + "] refreshing users array: " + newUsersArray);
-		const newArray = [...roomObjArray];
-		const roomIndex = newArray.findIndex((roomObj) => roomObj.name.toLowerCase() === roomName.toLowerCase());
-		// Change owner of room and Update State
-		newArray[roomIndex].users = newUsersArray;
-		setRoomObjArray(newArray);
+		// Change users of room and Update State
+		const newMap = new Map(roomObjMap);
+		newMap.get(roomName).users = newUsersArray;
+		setRoomObjMap(newMap);
 	}
 
 	// Component Props
@@ -364,8 +407,6 @@ const Chat = ({ authUser }) => {
 		currentRoomObj: selectedRoomObj,
 		handleLogout: authUser.handleLogout,
 		isRoomOwner: selectedRoomObj.owner === authUser.getUsername(),
-		roomOwnerName: selectedRoomObj.owner,
-		ableToLeaveRoom: selectedRoomObj.name === "main" ? false : true,
 	};
 	return (
 		<div>
@@ -375,7 +416,8 @@ const Chat = ({ authUser }) => {
 					<ChatOverlay {...chatOverlayProps} />
 					<Box sx={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
 						<RoomList
-							roomArray={roomObjArray}
+							roomMap={roomObjMap}
+							unreadMessagesMap={unreadMessagesMap}
 							selectedRoomName={selectedRoomObj.name}
 							selectedRoomChangedFunc={newSelectedRoom}
 							openNewRoomOverlay={enableNewRoomOverlay}

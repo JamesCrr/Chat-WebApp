@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
-import { styled, Box, Typography } from "@mui/material";
+import { styled, Box, Paper, Typography } from "@mui/material";
 
 const RoomListItemContainer = styled(Box)(({ selected, theme }) => ({
 	backgroundColor: selected ? "red" : "green",
 	width: "100%",
 	height: "5%",
-	paddingTop: "1rem",
-	paddingBottom: "1rem",
+	paddingTop: "5px",
+	paddingBottom: "5px",
+
 	display: "flex",
 	justifyContent: "space-between",
 	alignItems: "center",
 }));
+const UnreadCounterContainer = styled(Paper, { shouldForwardProp: (prop) => prop !== "active" })(({ active, theme }) => ({
+	opacity: active ? "1" : "0",
+	display: active ? "block" : "none",
 
-const RoomListItem = ({ roomObj, onItemClicked }) => {
+	marginRight: "2%",
+	background: theme.palette.background.paper,
+	padding: "2%",
+}));
+
+const RoomListItem = ({ roomObj, unreadCount, onItemClicked }) => {
 	const [roomDetails, setRoomDetails] = useState(null);
 	const [selected, setSelected] = useState(false);
 
@@ -27,7 +36,12 @@ const RoomListItem = ({ roomObj, onItemClicked }) => {
 
 	return (
 		<RoomListItemContainer selected={selected} onClick={onContainerClicked}>
-			<Typography sx={{ marginLeft: "5%" }}>{roomDetails ? roomDetails.name : ""}</Typography>
+			<Typography variant="h6" sx={{ marginLeft: "5%" }}>
+				{roomDetails ? roomDetails.name : ""}
+			</Typography>
+			<UnreadCounterContainer active={unreadCount > 0}>
+				<Typography variant="caption">{unreadCount}</Typography>
+			</UnreadCounterContainer>
 		</RoomListItemContainer>
 	);
 };

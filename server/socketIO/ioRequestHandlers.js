@@ -33,13 +33,14 @@ module.exports = (ioServer) => {
 			// Emit joining message to members
 			if (firstTimeJoined) {
 				console.log("first time join!");
-				const updatedDateString = new Date().toJSON();
 				// Wait a little before emitting message
 				setTimeout(() => {
 					// Emit all room users, Welcome message
-					ioServer
-						.in(roomNames[i])
-						.emit("receivemessage", { updatedDateString, roomTarget: roomNames[i], sender: "SERVER", content: `${username} joined the Room!` });
+					ioServer.in(roomNames[i]).emit("receiveservermessage", {
+						roomTarget: roomNames[i],
+						sender: "SERVER",
+						content: `${username} joined the Room!`,
+					});
 				}, 100);
 				// Emit to other room users
 				socket.to(roomNames[i]).emit("othersocketjoinedleftroom", { joined: true, roomName: roomNames[i], username });
@@ -57,8 +58,7 @@ module.exports = (ioServer) => {
 			// Leave room
 			socket.leave(roomNames[i]);
 			// Emit all room users, leaving message of socket in Room
-			ioServer.in(roomNames[i]).emit("receivemessage", {
-				updatedDateString: new Date().toJSON(),
+			ioServer.in(roomNames[i]).emit("receiveservermessage", {
 				roomTarget: roomNames[i],
 				sender: "SERVER",
 				content: `${username} left the Room!`,

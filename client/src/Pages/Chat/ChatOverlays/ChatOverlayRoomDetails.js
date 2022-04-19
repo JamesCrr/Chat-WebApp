@@ -29,7 +29,7 @@ const ChatOverlayRoomDetails = (props) => {
 					</MembersTitleContainer>
 					<MembersListParent direction="column" alignItems="stretch" justifyContent="flex-start" spacing={0.5}>
 						{props.currentRoomObj.users.map((username) => {
-							return username === props.roomOwnerName ? (
+							return username === props.currentRoomObj.owner ? (
 								<MembersItem key={username} sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
 									<Typography sx={{ marginRight: "1%" }}>{username}</Typography>
 									<Tooltip title="Admin" open={toolTipOpen} onClick={toggleToolTip} onClose={toggleToolTip} arrow>
@@ -53,7 +53,12 @@ const ChatOverlayRoomDetails = (props) => {
 							<Typography variant="h5">Leave Room</Typography>
 							<Typography variant="subtitle2">Leaving, but you can always return</Typography>
 						</Box>
-						<RoomDetailsDangerButton color="error" variant="outlined" onClick={props.ownLeaveRoomFunc} disabled={!props.ableToLeaveRoom}>
+						<RoomDetailsDangerButton
+							color="error"
+							variant="outlined"
+							onClick={props.ownLeaveRoomFunc}
+							disabled={props.currentRoomObj.name === "main" ? true : false}
+						>
 							Leave Room
 						</RoomDetailsDangerButton>
 					</RoomDetailDangerProperty>

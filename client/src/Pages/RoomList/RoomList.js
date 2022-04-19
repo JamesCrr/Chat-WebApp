@@ -21,9 +21,7 @@ const RoomListParent = styled(Box)(({ theme }) => ({
 	alignItems: "center",
 }));
 
-const RoomList = ({ roomArray, selectedRoomName, selectedRoomChangedFunc, openNewRoomOverlay }) => {
-	// console.log("RooomList Render", roomArray, currentRoom);
-
+const RoomList = ({ roomMap, unreadMessagesMap, selectedRoomName, selectedRoomChangedFunc, openNewRoomOverlay }) => {
 	/**
 	 * When the room list item was clicked
 	 * @param {Object} roomDetails Room details
@@ -33,14 +31,22 @@ const RoomList = ({ roomArray, selectedRoomName, selectedRoomChangedFunc, openNe
 		selectedRoomChangedFunc(roomDetails);
 	};
 
+	/**
+	 * Converts map object into an array of components to render
+	 * @returns An array of components
+	 */
+	const renderRoomMap = () => {
+		const resultArray = [];
+		roomMap.forEach((value, key) => {
+			resultArray.push(<RoomListItem key={value.name} roomObj={value} unreadCount={unreadMessagesMap.get(key)} onItemClicked={onRoomItemClicked} />);
+		});
+		return resultArray;
+	};
+
 	return (
 		<RoomListContainer>
 			<Button onClick={() => openNewRoomOverlay(OVERLAYTYPES.NEWROOM)}>Add</Button>
-			<RoomListParent>
-				{roomArray.map((roomObj) => {
-					return <RoomListItem key={roomObj.name} roomObj={roomObj} onItemClicked={onRoomItemClicked} />;
-				})}
-			</RoomListParent>
+			<RoomListParent>{renderRoomMap()}</RoomListParent>
 		</RoomListContainer>
 	);
 };
