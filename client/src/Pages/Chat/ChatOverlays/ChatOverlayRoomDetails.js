@@ -30,7 +30,12 @@ const ChatOverlayRoomDetails = (props) => {
 					<MembersListParent direction="column" alignItems="stretch" justifyContent="flex-start" spacing={0.5}>
 						{props.currentRoomObj.users.map((username) => {
 							return username === props.currentRoomObj.owner ? (
-								<MembersItem key={username} sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
+								<MembersItem
+									key={username}
+									ownself={username === props.currentUsername}
+									online={props.connectedUsersMap.has(username)}
+									sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}
+								>
 									<Typography sx={{ marginRight: "1%" }}>{username}</Typography>
 									<Tooltip title="Admin" open={toolTipOpen} onClick={toggleToolTip} onClose={toggleToolTip} arrow>
 										<svg style={{ width: "24px", height: "24px" }} viewBox="0 0 24 24">
@@ -42,7 +47,9 @@ const ChatOverlayRoomDetails = (props) => {
 									</Tooltip>
 								</MembersItem>
 							) : (
-								<MembersItem key={username}>{username}</MembersItem>
+								<MembersItem key={username} ownself={username === props.currentUsername} online={props.connectedUsersMap.has(username)}>
+									{username}
+								</MembersItem>
 							);
 						})}
 					</MembersListParent>
@@ -72,7 +79,7 @@ const ChatOverlayRoomDetails = (props) => {
 						</RoomDetailsDangerButton>
 					</RoomDetailDangerProperty>
 				</RoomDetailsDangerZone>
-				<Button sx={{ marginTop: "4%", marginBottom: "2%" }} variant="contained" color="error" onClick={props.handleLogout}>
+				<Button sx={{ marginTop: "4%", marginBottom: "2%" }} variant="contained" color="error" onClick={props.handleLogoutFunc}>
 					Log Out
 				</Button>
 			</RoomDetailsContentBox>

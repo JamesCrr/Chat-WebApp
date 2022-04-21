@@ -14,13 +14,15 @@ export const OVERLAYTYPES = {
 Object.freeze(OVERLAYTYPES);
 
 const Chat = ({ authUser }) => {
-	const socketInstance = useSocketIO(authUser.getJWT(), socketSuccessCB, socketErrorCB);
+	const socketInstance = useSocketIO(authUser.getJWT(), socketSuccessCB, socketDisconnectCB, socketErrorCB);
 	// Data Loading
 	const [dataLoaded, setDataLoaded] = useState(false); // Initial data fully loaded yet?
 	const dataLoadedBeforeRef = useRef(false); // Initial data been loaded before?
 	// Overlay
 	const [renderOverlay, setRenderOverlay] = useState(false);
 	const [overlayDetails, setOverlayDetails] = useState({ newRoom: false, roomDetails: false, error: false, errorMessage: "" });
+	// Connected Users
+	const [connectedUsers, setConnectedUsers] = useState(new Map());
 	// Rooms
 	const [roomObjMap, setRoomObjMap] = useState(new Map());
 	const [selectedRoomObj, setSelectedRoomObj] = useState({ name: "" });
@@ -28,10 +30,12 @@ const Chat = ({ authUser }) => {
 	// ChatLog
 	const [chatLog, setChatLog] = useState({});
 
+	// Run every time rerenders
 	useEffect(() => {
 		// Reregister listener functions to prevent stale state
 		socketInstance.registerListener("receivemessage", ioListenerMessageReceived);
 		socketInstance.registerListener("receiveservermessage", ioListenerSERVERMessageReceived);
+		socketInstance.registerListener("receiveconnectedusers", ioListenerConnectedUsersReceived);
 		socketInstance.registerListener("socketleftroom", ioListenerSocketLeftRoom);
 		socketInstance.registerListener("updateroomowner", ioListenerUpdateRoomOwner);
 		socketInstance.registerListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
@@ -39,12 +43,13 @@ const Chat = ({ authUser }) => {
 		return () => {
 			socketInstance.unregisterListener("receivemessage", ioListenerMessageReceived);
 			socketInstance.unregisterListener("receiveservermessage", ioListenerSERVERMessageReceived);
+			socketInstance.unregisterListener("receiveconnectedusers", ioListenerConnectedUsersReceived);
 			socketInstance.unregisterListener("socketleftroom", ioListenerSocketLeftRoom);
 			socketInstance.unregisterListener("updateroomowner", ioListenerUpdateRoomOwner);
 			socketInstance.unregisterListener("othersocketjoinedleftroom", ioListenerOtherSocketJoinedLeftRoom);
 			socketInstance.unregisterListener("refreshroomusersarray", ioListenerRefreshRoomUsersArray);
 		};
-	}, [ioListenerMessageReceived]);
+	});
 	useEffect(() => {
 		// Prevent multiple loading of data
 		if (dataLoadedBeforeRef.current || socketInstance.isSocketLoading()) return;
@@ -61,6 +66,10 @@ const Chat = ({ authUser }) => {
 	}
 	function socketSuccessCB() {
 		console.log("Socket Success Callback");
+		socketInstance.emitEvent("userconnected", { username: authUser.getUsername() });
+	}
+	function socketDisconnectCB() {
+		console.log("Socket Disconnect Callback");
 	}
 	/**
 	 * Fetches required initial data
@@ -325,6 +334,16 @@ const Chat = ({ authUser }) => {
 		addMessageToState(newPayload);
 	}
 	/**
+	 * Listener function when connected users changes
+	 * @param {Object} payload
+	 */
+	function ioListenerConnectedUsersReceived(payload) {
+		const { arrayOfUsers } = payload;
+		const newMap = new Map();
+		arrayOfUsers.forEach((user) => newMap.set(user, user));
+		setConnectedUsers(newMap);
+	}
+	/**
 	 * Listener function when this socket leaves a room he is part of,
 	 * may not always be done by ownself (ex: room owner deletes the room, while user in other room)
 	 * @param {Object} payload
@@ -404,8 +423,10 @@ const Chat = ({ authUser }) => {
 		createNewRoomFunc: createNewRoom,
 		deleteRoomFunc: deleteRoom,
 		leaveRoomFunc: leaveRoom,
+		handleLogoutFunc: authUser.handleLogout,
+		currentUsername: authUser.getUsername(),
 		currentRoomObj: selectedRoomObj,
-		handleLogout: authUser.handleLogout,
+		connectedUsersMap: connectedUsers,
 		isRoomOwner: selectedRoomObj.owner === authUser.getUsername(),
 	};
 	return (
@@ -414,7 +435,7 @@ const Chat = ({ authUser }) => {
 			{dataLoaded && (
 				<Box>
 					<ChatOverlay {...chatOverlayProps} />
-					<Box sx={{ display: "flex", justifyContent: "space-around", alignItems: "center" }}>
+					<Box sx={{ display: "flex", justifyContent: { xs: "flex-start", sm: "space-around" }, alignItems: "center" }}>
 						<RoomList
 							roomMap={roomObjMap}
 							unreadMessagesMap={unreadMessagesMap}

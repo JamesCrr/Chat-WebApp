@@ -36,7 +36,7 @@ const RoomListItem = ({ roomObj, unreadCount, onItemClicked }) => {
 
 	return (
 		<RoomListItemContainer selected={selected} onClick={onContainerClicked}>
-			<Typography variant="h6" sx={{ marginLeft: "5%" }}>
+			<Typography variant="h6" sx={{ marginLeft: "5%", overflow: "clip", textOverflow: "ellipsis" }}>
 				{roomDetails ? roomDetails.name : ""}
 			</Typography>
 			<UnreadCounterContainer active={unreadCount > 0}>

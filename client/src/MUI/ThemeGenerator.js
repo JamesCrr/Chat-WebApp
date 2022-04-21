@@ -3,8 +3,9 @@ import { createTheme } from "@mui/material";
 const darkModeTransTime = "0.3s";
 const backgroundDefault_light = "#fff";
 const backgroundPaper_light = "#d6d6d6";
+
 const backgroundDefault_dark = "#121212";
-const backgroundPaper_dark = "#121212";
+const backgroundPaper_dark = "#212121";
 
 /**
  * Generates Palette for Themes, values not filled in will be subbed in by MUI
@@ -68,7 +69,7 @@ const breakpointsGenerator = () => {
 	return {
 		values: {
 			xs: 0,
-			sm: 600,
+			sm: 500,
 			md: 900,
 			lg: 1200,
 			xl: 1536,

@@ -2,7 +2,7 @@ import { styled, Box, Paper, Button, Typography, IconButton, Stack } from "@mui/
 
 const OverlayBox = styled(Box)(({ theme }) => ({
 	position: "absolute",
-	zIndex: "1",
+	zIndex: "10",
 	display: "flex",
 	justifyContent: "center",
 	backgroundColor: theme.palette.mode === "light" ? "rgba(100, 100, 100, 0.8)" : "rgba(50, 50, 50, 0.9)",
@@ -62,7 +62,7 @@ const RoomDetailsContentBox = styled(Box)(({ theme }) => ({
 	scrollbarWidth: "none" /* Firefox */,
 }));
 const MembersContainer = styled(Paper)(({ theme }) => ({
-	background: theme.palette.background.paper,
+	background: "none",
 	boxShadow: "none",
 	textAlign: "left",
 	width: "80%",
@@ -71,15 +71,19 @@ const MembersContainer = styled(Paper)(({ theme }) => ({
 const MembersTitleContainer = styled(Paper)(({ theme }) => ({
 	background: theme.palette.background.default,
 	boxShadow: "none",
-	borderBottom: `1px ${theme.palette.text.primary} solid`,
+	borderBottom: `4px ${theme.palette.text.primary} solid`,
 	borderRadius: "4px 4px 0px 0px",
-	padding: "5px",
+	marginBottom: "5px",
 }));
 const MembersListParent = styled(Stack)(({ theme }) => ({
 	background: theme.palette.background.default,
 }));
-const MembersItem = styled(Paper)(({ theme }) => ({
-	border: "none",
+const MembersItem = styled(Paper, { shouldForwardProp: (prop) => prop !== "ownself" && prop !== "online" })(({ ownself, online, theme }) => ({
+	background: online ? theme.palette.success.main : theme.palette.background.paper,
+	boxSizing: "border-box",
+	borderLeft: ownself ? "10px solid" : "none",
+	borderRadius: "0px 0px 4px 4px",
+	fontWeight: ownself ? "bold" : "none",
 	padding: "5px",
 	paddingLeft: "10px",
 }));

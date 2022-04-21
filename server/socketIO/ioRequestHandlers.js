@@ -84,5 +84,33 @@ module.exports = (ioServer) => {
 		socket.to(roomName).emit("refreshroomusersarray", payload);
 	};
 
-	return { chatMessage, joinRoom, leaveRoom, deleteRoom, refreshRoomUsersArray };
+	const mapOfUsers = new Map();
+	const getArrayOfConnectedUsers = function () {
+		const connectedUsers = [];
+		mapOfUsers.forEach((value) => {
+			connectedUsers.push(value);
+		});
+		return connectedUsers;
+	};
+	const userConnected = function (payload) {
+		const socket = this;
+		const { username } = payload;
+		// console.log("NEW USER CONNECTED:", username);
+		mapOfUsers.set(socket.id, username);
+		ioServer.emit("receiveconnectedusers", { arrayOfUsers: getArrayOfConnectedUsers() });
+	};
+	const userDisconnected = function (socketId) {
+		// console.log("NEW USER DISCONNECTED:", mapOfUsers.get(socketId));
+		mapOfUsers.delete(socketId);
+		ioServer.emit("receiveconnectedusers", { arrayOfUsers: getArrayOfConnectedUsers() });
+	};
+
+	const socketDisconnecting = function () {
+		const socket = this;
+		console.log(socket.id, "about to leave");
+		// Remove from map of connected users
+		userDisconnected(socket.id);
+	};
+
+	return { userConnected, socketDisconnecting, chatMessage, joinRoom, leaveRoom, deleteRoom, refreshRoomUsersArray };
 };

@@ -3,7 +3,7 @@ import { styled, Paper, Typography, Button } from "@mui/material";
 const OverlayContainer = styled(Paper, { shouldForwardProp: (prop) => prop !== "active" })(({ active, theme }) => ({
 	transition: "opacity 0.5s, visibility 0s 0.5s",
 	position: "absolute",
-	zIndex: "10",
+	zIndex: "100",
 
 	opacity: active ? "1" : "0",
 	visibility: active ? "visible" : "hidden",

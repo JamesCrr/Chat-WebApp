@@ -5,6 +5,18 @@ import { OVERLAYTYPES } from "../ChattingApp";
 import DarkLightIconButton from "../DarkLightIconButton";
 import ChatLogMessage from "./ChatLogMessage";
 
+const ChatRoomLogContainer1 = styled(Paper)(({ theme }) => ({
+	height: "100vh",
+	borderRadius: "0px",
+	background: theme.palette.background.paper,
+
+	[theme.breakpoints.up("xs")]: {
+		width: "100%",
+	},
+	[theme.breakpoints.up("sm")]: {
+		width: "80%",
+	},
+}));
 const ChatRoomTitleBar = styled(Paper)(({ theme }) => ({
 	height: "10vh",
 	display: "flex",
@@ -19,6 +31,7 @@ const ChatRoomTitleTypography = styled(Typography)(({ theme }) => ({
 }));
 const IconButtonsContainer = styled(Paper)(({ theme }) => ({
 	background: theme.palette.background.paper,
+	boxShadow: "none",
 	padding: "0.5%",
 }));
 const ChatRoomSettingsIconButton = styled(IconButton)(({ theme }) => ({}));
@@ -162,7 +175,7 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 	};
 
 	return (
-		<Paper sx={{ width: "80%", height: "100vh", borderRadius: "0px", background: theme.palette.background.paper }}>
+		<ChatRoomLogContainer1>
 			<ChatRoomTitleBar>
 				<ChatRoomTitleTypography variant="h4">{selectedRoomObj.name}</ChatRoomTitleTypography>
 				<IconButtonsContainer>
@@ -186,7 +199,7 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 			<form onSubmit={onFieldSubmit}>
 				<ChatTextField onChange={onFieldValueChange} value={fieldValue} variant="outlined" />
 			</form>
-		</Paper>
+		</ChatRoomLogContainer1>
 	);
 };
 

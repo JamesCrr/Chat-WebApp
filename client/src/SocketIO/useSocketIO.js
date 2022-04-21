@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 // useRef instead of this??
 // Tested when rerendering but was NOT set back to null
 let socketRef = null;
-const useSocketIO = (jwt, connectedCallback, errorCallback) => {
+const useSocketIO = (jwt, connectedCallback, disconnectCallback, errorCallback) => {
 	const [socketError, setSocketError] = useState(false); // Socket has any errors?
 	const [socketLoading, setSocketLoading] = useState(true); // Socket still loading?
 
@@ -26,6 +26,16 @@ const useSocketIO = (jwt, connectedCallback, errorCallback) => {
 			connectedCallback();
 			setSocketError(false);
 			setSocketLoading(false);
+		});
+		socketRef.on("disconnect", () => {
+			console.log("SocketIO Disconnected!");
+			disconnectCallback();
+			/* No need to call disconnectSocket(), as socket as already
+			been disconnected. */
+			// Reset state
+			socketRef = null;
+			setSocketError(false);
+			setSocketLoading(true);
 		});
 		socketRef.on("connect_error", (err) => {
 			console.log("SocketIO Connect Error:", err.message);
