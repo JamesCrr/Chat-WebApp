@@ -17,7 +17,7 @@ const ChatOverlayRoomDetails = (props) => {
 
 	return (
 		<>
-			<Typography sx={{ height: "10%", paddingBottom: "2%" }} variant="h3">
+			<Typography sx={{ height: "10%" }} variant="h3">
 				Settings
 			</Typography>
 			<RoomDetailsContentBox>
@@ -57,8 +57,15 @@ const ChatOverlayRoomDetails = (props) => {
 				<RoomDetailsDangerZone elevation={3}>
 					<RoomDetailDangerProperty variant="outlined" square>
 						<Box sx={{ display: "inline-block" }}>
-							<Typography variant="h5">Leave Room</Typography>
-							<Typography variant="subtitle2">Leaving, but you can always return</Typography>
+							<Typography sx={{ fontWeight: "bold" }} variant="h5">
+								Leave Room
+							</Typography>
+							<Typography
+								color={(theme) => (theme.palette.mode === "dark" ? theme.palette.text.secondary : "rgba(0, 0, 0, 0.8)")}
+								variant="subtitle2"
+							>
+								Leaving, but you can always return
+							</Typography>
 						</Box>
 						<RoomDetailsDangerButton
 							color="error"
@@ -71,8 +78,15 @@ const ChatOverlayRoomDetails = (props) => {
 					</RoomDetailDangerProperty>
 					<RoomDetailDangerProperty variant="outlined" square>
 						<Box sx={{ display: "inline-block" }}>
-							<Typography variant="h5">Delete Room</Typography>
-							<Typography variant="subtitle2">Kick everyone out and say goodbye!</Typography>
+							<Typography sx={{ fontWeight: "bold" }} variant="h5">
+								Delete Room
+							</Typography>
+							<Typography
+								color={(theme) => (theme.palette.mode === "dark" ? theme.palette.text.secondary : "rgba(0, 0, 0, 0.8)")}
+								variant="subtitle2"
+							>
+								Kick everyone out and say goodbye!
+							</Typography>
 						</Box>
 						<RoomDetailsDangerButton color="error" variant="outlined" onClick={props.ownDeleteRoomFunc} disabled={!props.isRoomOwner}>
 							Delete Room

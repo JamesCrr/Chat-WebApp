@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AddNewRoomContentBox, ErrorTypography } from "./ChatOverlayStyles";
+import { AddNewRoomContentBox, AddNewRoomButton, ErrorTypography } from "./ChatOverlayStyles";
 import { Box, Typography, TextField, Button, Fade } from "@mui/material";
 
 const ChatOverlayNewRoom = ({ overlayDetails, createNewRoomFunc }) => {
@@ -33,9 +33,9 @@ const ChatOverlayNewRoom = ({ overlayDetails, createNewRoomFunc }) => {
 					)}
 				</Box>
 			</form>
-			<Button sx={{ marginTop: "5%", display: "block" }} variant="contained" onClick={onNewRoomNameFieldSubmit}>
-				Add
-			</Button>
+			<AddNewRoomButton variant="contained" onClick={onNewRoomNameFieldSubmit}>
+				<Typography variant="button">Add</Typography>
+			</AddNewRoomButton>
 		</AddNewRoomContentBox>
 	);
 };

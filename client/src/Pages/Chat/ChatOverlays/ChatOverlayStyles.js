@@ -22,10 +22,11 @@ const CloseOverlayButton = styled(IconButton)(({ theme }) => ({
 	border: "2.5px solid red",
 	borderRadius: "30px",
 	padding: "1px",
-	background: theme.palette.background.default,
-	transition: "box-shadow 0.3s ease-out",
+	background: theme.palette.background.paper,
+	transition: "box-shadow 0.3s ease-out, background 0.3s",
 	":hover": {
-		boxShadow: "0px 8px 20px -7px grey",
+		background: theme.palette.primary.main,
+		boxShadow: "0px 8px 10px -7px black",
 	},
 }));
 
@@ -39,6 +40,15 @@ const AddNewRoomContentBox = styled(Box)(({ theme }) => ({
 	alignItems: "center",
 	justifyContent: "space-around",
 	textAlign: "center",
+}));
+const AddNewRoomButton = styled(Button)(({ theme }) => ({
+	marginTop: "5%",
+	display: "block",
+	background: theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.main,
+
+	"&:hover": {
+		background: theme.palette.mode === "dark" ? theme.palette.primary.main : theme.palette.primary.dark,
+	},
 }));
 const ErrorTypography = styled(Typography)(({ theme }) => ({
 	wordWrap: "break-word",
@@ -62,24 +72,28 @@ const RoomDetailsContentBox = styled(Box)(({ theme }) => ({
 	scrollbarWidth: "none" /* Firefox */,
 }));
 const MembersContainer = styled(Paper)(({ theme }) => ({
-	background: "none",
-	boxShadow: "none",
+	background: theme.palette.background.paper,
+	boxShadow: "10px 10px 12px 0px rgba(0, 0, 0, 0.6)",
+	boxSizing: "border-box",
 	textAlign: "left",
+	padding: "10px",
 	width: "80%",
-	marginTop: "2%",
+	marginTop: "24px",
+	marginBottom: "12px",
 }));
 const MembersTitleContainer = styled(Paper)(({ theme }) => ({
-	background: theme.palette.background.default,
+	background: "none",
 	boxShadow: "none",
-	borderBottom: `4px ${theme.palette.text.primary} solid`,
+	borderBottom: `4px ${theme.palette.text.secondary} solid`,
 	borderRadius: "4px 4px 0px 0px",
-	marginBottom: "5px",
 }));
 const MembersListParent = styled(Stack)(({ theme }) => ({
-	background: theme.palette.background.default,
+	background: "none",
+	paddingTop: "5px",
 }));
 const MembersItem = styled(Paper, { shouldForwardProp: (prop) => prop !== "ownself" && prop !== "online" })(({ ownself, online, theme }) => ({
-	background: online ? theme.palette.success.main : theme.palette.background.paper,
+	background: online ? (theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.main) : theme.palette.background.paper,
+	color: online ? theme.palette.text.primary : theme.palette.text.disabled,
 	boxSizing: "border-box",
 	borderLeft: ownself ? "10px solid" : "none",
 	borderRadius: "0px 0px 4px 4px",
@@ -89,11 +103,14 @@ const MembersItem = styled(Paper, { shouldForwardProp: (prop) => prop !== "ownse
 }));
 const RoomDetailsDangerZone = styled(Paper)(({ theme }) => ({
 	width: "70%",
-	border: `3px solid ${theme.palette.error.dark}`,
+	border: `5px solid ${theme.palette.error.dark}`,
 	borderStyle: "solid",
+
 	marginTop: "4%",
+	boxShadow: "10px 10px 12px 0px rgba(0, 0, 0, 0.6)",
 }));
 const RoomDetailDangerProperty = styled(Paper)(({ theme }) => ({
+	background: theme.palette.background.paper,
 	textAlign: "left",
 	padding: "3%",
 }));
@@ -110,6 +127,7 @@ export {
 	CloseOverlayButton,
 	ParentContentPaper,
 	AddNewRoomContentBox,
+	AddNewRoomButton,
 	ErrorTypography,
 	RoomDetailsContentBox,
 	MembersContainer,

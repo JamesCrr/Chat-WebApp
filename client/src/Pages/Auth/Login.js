@@ -1,14 +1,8 @@
 import React, { useState } from "react";
-import { styled, Button, Container, TextField, Typography } from "@mui/material";
+import { Container, TextField, Typography } from "@mui/material";
+import { PageBackgroundPaper, ContentBox, ContentPaper, PageTitle, ButtonPaper, SubmitButton, AlternativeOptionTraverseLink } from "./AuthStyles";
 import { Link } from "react-router-dom";
 import AppearanceToggleBar from "./AppearanceToggleBar";
-
-const LoginBackground = styled(Container)(({ theme }) => ({
-	height: "100vh",
-	minWidth: "100vw",
-	background: theme.palette.background.default,
-}));
-const LoginContainer = styled(Container)(({ theme }) => ({}));
 
 // [TODO]:
 // Have loading animation for Heroku Startup timing, gonna take awhile
@@ -33,11 +27,10 @@ const Login = ({ LoginUser }) => {
 				},
 				body: JSON.stringify({ email, password }),
 			});
-			// [TODO]:
-			// Throw a different status for our own errors
 			if (res.status === 404) throw new Error("Unable to login");
-			const data = await res.json();
-			const { username, _dbId, token } = data;
+			const resJSON = await res.json();
+			if (resJSON.errorCode) throw new Error("Unable to login");
+			const { username, _dbId, token } = resJSON;
 			LoginUser(username, _dbId, token);
 		} catch (error) {
 			// [TODO]:
@@ -45,33 +38,41 @@ const Login = ({ LoginUser }) => {
 			console.log(error);
 		}
 	};
-	const onSubmitButton = () => {
+	const onSubmitButtonPressed = () => {
 		if (!email || !password) return false;
 		// Send login info to server
 		handleLogin();
 	};
 
 	return (
-		<LoginBackground>
-			<LoginContainer>
+		<PageBackgroundPaper>
+			<Container sx={{ background: "none" }}>
 				<AppearanceToggleBar />
-				<Typography sx={{ paddingTop: "2%", paddingBottom: "2%" }} variant="h2">
-					Login
-				</Typography>
-				<Typography variant="h6">Email</Typography>
-				<TextField onChange={onEmailChange} value={email} variant="outlined" />
-				<Typography variant="h6">Password</Typography>
-				<TextField onChange={onPasswordChange} value={password} variant="outlined" />
-				<form>
-					<Button variant="outlined" onClick={onSubmitButton}>
-						Login
-					</Button>
-				</form>
-				<Typography variant="p">
-					<Link to="/register">Register Instead</Link>
-				</Typography>
-			</LoginContainer>
-		</LoginBackground>
+				<ContentBox>
+					<ContentPaper elevation={12}>
+						<PageTitle variant="h2">Login</PageTitle>
+						<Typography variant="h6">Email</Typography>
+						<TextField onChange={onEmailChange} value={email} variant="outlined" />
+						<Typography sx={{ marginTop: "10px" }} variant="h6">
+							Password
+						</Typography>
+						<TextField onChange={onPasswordChange} value={password} variant="outlined" />
+						<form onSubmit={onSubmitButtonPressed}>
+							<ButtonPaper>
+								<SubmitButton variant="contained" onClick={onSubmitButtonPressed}>
+									<Typography variant="p">Login</Typography>
+								</SubmitButton>
+							</ButtonPaper>
+						</form>
+						<Typography sx={{ display: "inline" }} variant="p">
+							<Link style={{ textDecoration: "none" }} to="/register">
+								<AlternativeOptionTraverseLink variant="subtitle2">Register Instead</AlternativeOptionTraverseLink>
+							</Link>
+						</Typography>
+					</ContentPaper>
+				</ContentBox>
+			</Container>
+		</PageBackgroundPaper>
 	);
 };
 
