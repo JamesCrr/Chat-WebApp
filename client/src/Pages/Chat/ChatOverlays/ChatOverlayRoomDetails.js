@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button, Paper, Tooltip, Typography } from "@mui/material";
+import { Box, Tooltip, Typography } from "@mui/material";
 import {
 	RoomDetailsContentBox,
 	RoomDetailsDangerZone,
@@ -9,6 +9,7 @@ import {
 	MembersItem,
 	RoomDetailDangerProperty,
 	RoomDetailsDangerButton,
+	LogoutButton,
 } from "./ChatOverlayStyles";
 
 const ChatOverlayRoomDetails = (props) => {
@@ -23,7 +24,7 @@ const ChatOverlayRoomDetails = (props) => {
 			<RoomDetailsContentBox>
 				<MembersContainer>
 					<MembersTitleContainer>
-						<Typography sx={{ fontWeight: "bold" }} variant="h5">
+						<Typography sx={{ fontWeight: "bold" }} variant="h6">
 							Room Members
 						</Typography>
 					</MembersTitleContainer>
@@ -57,7 +58,7 @@ const ChatOverlayRoomDetails = (props) => {
 				<RoomDetailsDangerZone elevation={3}>
 					<RoomDetailDangerProperty variant="outlined" square>
 						<Box sx={{ display: "inline-block" }}>
-							<Typography sx={{ fontWeight: "bold" }} variant="h5">
+							<Typography sx={{ fontWeight: "bold" }} variant="h6">
 								Leave Room
 							</Typography>
 							<Typography
@@ -68,17 +69,17 @@ const ChatOverlayRoomDetails = (props) => {
 							</Typography>
 						</Box>
 						<RoomDetailsDangerButton
-							color="error"
-							variant="outlined"
-							onClick={props.ownLeaveRoomFunc}
+							variant="contained"
+							onClick={props.leaveThisRoomFunc}
 							disabled={props.currentRoomObj.name === "main" ? true : false}
+							loading={props.overlayDetails.waitingForServer}
 						>
-							Leave Room
+							Leave
 						</RoomDetailsDangerButton>
 					</RoomDetailDangerProperty>
 					<RoomDetailDangerProperty variant="outlined" square>
 						<Box sx={{ display: "inline-block" }}>
-							<Typography sx={{ fontWeight: "bold" }} variant="h5">
+							<Typography sx={{ fontWeight: "bold" }} variant="h6">
 								Delete Room
 							</Typography>
 							<Typography
@@ -88,14 +89,19 @@ const ChatOverlayRoomDetails = (props) => {
 								Kick everyone out and say goodbye!
 							</Typography>
 						</Box>
-						<RoomDetailsDangerButton color="error" variant="outlined" onClick={props.ownDeleteRoomFunc} disabled={!props.isRoomOwner}>
-							Delete Room
+						<RoomDetailsDangerButton
+							variant="contained"
+							onClick={props.deleteThisRoomFunc}
+							disabled={!props.isRoomOwner}
+							loading={props.overlayDetails.waitingForServer}
+						>
+							Delete
 						</RoomDetailsDangerButton>
 					</RoomDetailDangerProperty>
 				</RoomDetailsDangerZone>
-				<Button sx={{ marginTop: "4%", marginBottom: "2%" }} variant="contained" color="error" onClick={props.handleLogoutFunc}>
+				<LogoutButton variant="contained" onClick={props.handleLogoutFunc}>
 					Log Out
-				</Button>
+				</LogoutButton>
 			</RoomDetailsContentBox>
 		</>
 	);

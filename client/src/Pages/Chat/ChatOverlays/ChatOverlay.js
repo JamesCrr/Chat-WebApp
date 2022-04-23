@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { Box, Fade } from "@mui/material";
+import { Box, Fade, useTheme } from "@mui/material";
 import { OverlayBox, ParentContentPaper, CloseOverlayButton } from "./ChatOverlayStyles";
 import ChatOverlayNewRoom from "./ChatOverlayNewRoom";
 import ChatOverlayRoomDetails from "./ChatOverlayRoomDetails";
@@ -18,6 +18,7 @@ const ChatOverlay = ({
 	connectedUsersMap,
 	isRoomOwner,
 }) => {
+	const theme = useTheme();
 	// Close overlay when clicking background
 	const overlayBackgroundClicked = () => closeOverlayFunc();
 	// Stop parent event from firing that closes overlay
@@ -30,14 +31,8 @@ const ChatOverlay = ({
 	const whichOverlayToRender = () => {
 		const componentProps = {
 			overlayDetails,
-			ownDeleteRoomFunc: () => {
-				deleteRoomFunc(currentRoomObj.name);
-				closeOverlayFunc();
-			},
-			ownLeaveRoomFunc: () => {
-				leaveRoomFunc(currentRoomObj.name);
-				closeOverlayFunc();
-			},
+			deleteThisRoomFunc: () => deleteRoomFunc(currentRoomObj.name),
+			leaveThisRoomFunc: () => leaveRoomFunc(currentRoomObj.name),
 			createNewRoomFunc,
 			handleLogoutFunc,
 		};
@@ -46,33 +41,18 @@ const ChatOverlay = ({
 			return <ChatOverlayRoomDetails {...{ ...componentProps, connectedUsersMap, currentUsername, currentRoomObj, isRoomOwner }} />;
 		else return <ChatOverlayNewRoom {...componentProps} />;
 	};
-	/**
-	 * Returns different CSS width depending on the current overlay
-	 * @returns Overlay CSS width property
-	 */
-	const getOverlayWidth = () => {
-		if (overlayDetails.newRoom) return "40%";
-		else if (overlayDetails.roomDetails) return "80%";
-		else return "40%";
-	};
-	/**
-	 * Returns different CSS height depending on the current overlay
-	 * @returns Overlay CSS height property
-	 */
-	const getOverlayHeight = () => {
-		if (overlayDetails.newRoom) return "70%";
-		else if (overlayDetails.roomDetails) return "85%";
-		else return "70%";
-	};
 
 	return (
 		<Fade in={renderOverlay} timeout={250}>
 			<OverlayBox onClick={overlayBackgroundClicked}>
-				<ParentContentPaper elevation={6} ownwidth={getOverlayWidth()} ownheight={getOverlayHeight()} onClick={overlayContentClicked}>
+				<ParentContentPaper elevation={6} newRoom={overlayDetails.newRoom} onClick={overlayContentClicked}>
 					<Box sx={{ height: "5%", paddingTop: "10px", paddingRight: "10px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
 						<CloseOverlayButton onClick={overlayBackgroundClicked}>
 							<svg style={{ width: "24px", height: "24px" }} viewBox="0 0 24 24">
-								<path fill="red" d="M20 6.91L17.09 4L12 9.09L6.91 4L4 6.91L9.09 12L4 17.09L6.91 20L12 14.91L17.09 20L20 17.09L14.91 12L20 6.91Z" />
+								<path
+									fill={theme.palette.error.dark}
+									d="M20 6.91L17.09 4L12 9.09L6.91 4L4 6.91L9.09 12L4 17.09L6.91 20L12 14.91L17.09 20L20 17.09L14.91 12L20 6.91Z"
+								/>
 							</svg>
 						</CloseOverlayButton>
 					</Box>

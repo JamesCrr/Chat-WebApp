@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { AddNewRoomContentBox, AddNewRoomButton, ErrorTypography } from "./ChatOverlayStyles";
-import { Box, Typography, TextField, Button, Fade } from "@mui/material";
+import { Box, Typography, TextField, Fade } from "@mui/material";
 
 const ChatOverlayNewRoom = ({ overlayDetails, createNewRoomFunc }) => {
 	const [newRoomName, setNewRoomName] = useState("");
+
 	/**
 	 * Textfield for new room changes
 	 * @param {Object} event
@@ -33,8 +34,8 @@ const ChatOverlayNewRoom = ({ overlayDetails, createNewRoomFunc }) => {
 					)}
 				</Box>
 			</form>
-			<AddNewRoomButton variant="contained" onClick={onNewRoomNameFieldSubmit}>
-				<Typography variant="button">Add</Typography>
+			<AddNewRoomButton loading={overlayDetails.waitingForServer} variant="contained" onClick={onNewRoomNameFieldSubmit}>
+				Add
 			</AddNewRoomButton>
 		</AddNewRoomContentBox>
 	);

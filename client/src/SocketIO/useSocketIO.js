@@ -33,7 +33,6 @@ const useSocketIO = (jwt, connectedCallback, disconnectCallback, errorCallback) 
 			/* No need to call disconnectSocket(), as socket as already
 			been disconnected. */
 			// Reset state
-			socketRef = null;
 			setSocketError(false);
 			setSocketLoading(true);
 		});

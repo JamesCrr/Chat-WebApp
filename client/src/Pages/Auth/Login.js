@@ -1,6 +1,16 @@
 import React, { useState } from "react";
+import ReactDOM from "react-dom";
 import { Container, TextField, Typography } from "@mui/material";
-import { PageBackgroundPaper, ContentBox, ContentPaper, PageTitle, ButtonPaper, SubmitButton, AlternativeOptionTraverseLink } from "./AuthStyles";
+import {
+	PageBackgroundPaper,
+	ContentBox,
+	ContentPaper,
+	PageTitle,
+	ErrorMessagePaper,
+	ButtonBox,
+	SubmitButton,
+	AlternativeOptionTraverseLink,
+} from "./AuthStyles";
 import { Link } from "react-router-dom";
 import AppearanceToggleBar from "./AppearanceToggleBar";
 
@@ -9,13 +19,12 @@ import AppearanceToggleBar from "./AppearanceToggleBar";
 const Login = ({ LoginUser }) => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	// Server related
+	const [errorMessage, setErrorMessage] = useState("");
+	const [waitingForServer, setWaitingForServer] = useState(false);
 
-	const onEmailChange = (e) => {
-		setEmail(e.target.value);
-	};
-	const onPasswordChange = (e) => {
-		setPassword(e.target.value);
-	};
+	const onEmailChange = (e) => setEmail(e.target.value);
+	const onPasswordChange = (e) => setPassword(e.target.value);
 	const handleLogin = async () => {
 		// [TODO]:
 		// Validate data bfr sending..
@@ -27,19 +36,27 @@ const Login = ({ LoginUser }) => {
 				},
 				body: JSON.stringify({ email, password }),
 			});
-			if (res.status === 404) throw new Error("Unable to login");
+			if (res.status === 404) throw new Error("Unable to reach Server, Try again later!");
 			const resJSON = await res.json();
-			if (resJSON.errorCode) throw new Error("Unable to login");
+			if (resJSON.errorCode) throw new Error(resJSON.message);
 			const { username, _dbId, token } = resJSON;
-			LoginUser(username, _dbId, token);
+			ReactDOM.unstable_batchedUpdates(() => {
+				// Login with credentials received
+				LoginUser(username, _dbId, token);
+				setWaitingForServer(false);
+			});
 		} catch (error) {
-			// [TODO]:
-			// Display errors to user instead of console logging
 			console.log(error);
+			ReactDOM.unstable_batchedUpdates(() => {
+				setErrorMessage(error.message);
+				setWaitingForServer(false);
+			});
 		}
 	};
 	const onSubmitButtonPressed = () => {
-		if (!email || !password) return false;
+		if (!email || !password || waitingForServer) return false;
+		// Wait for server responses
+		setWaitingForServer(true);
 		// Send login info to server
 		handleLogin();
 	};
@@ -51,18 +68,21 @@ const Login = ({ LoginUser }) => {
 				<ContentBox>
 					<ContentPaper elevation={12}>
 						<PageTitle variant="h2">Login</PageTitle>
-						<Typography variant="h6">Email</Typography>
+						<Typography color={(theme) => theme.palette.text.secondary} variant="h6">
+							Email
+						</Typography>
 						<TextField onChange={onEmailChange} value={email} variant="outlined" />
-						<Typography sx={{ marginTop: "10px" }} variant="h6">
+						<Typography color={(theme) => theme.palette.text.secondary} sx={{ marginTop: "10px" }} variant="h6">
 							Password
 						</Typography>
 						<TextField onChange={onPasswordChange} value={password} variant="outlined" />
+						<ErrorMessagePaper errorActive={errorMessage === "" ? false : true}>{errorMessage}&nbsp;</ErrorMessagePaper>
 						<form onSubmit={onSubmitButtonPressed}>
-							<ButtonPaper>
-								<SubmitButton variant="contained" onClick={onSubmitButtonPressed}>
-									<Typography variant="p">Login</Typography>
+							<ButtonBox>
+								<SubmitButton loading={waitingForServer} variant="contained" onClick={onSubmitButtonPressed}>
+									Login
 								</SubmitButton>
-							</ButtonPaper>
+							</ButtonBox>
 						</form>
 						<Typography sx={{ display: "inline" }} variant="p">
 							<Link style={{ textDecoration: "none" }} to="/register">

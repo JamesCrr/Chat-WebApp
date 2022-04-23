@@ -4,12 +4,13 @@ import { Paper, styled, useTheme } from "@mui/material";
 import DarkLightIconButton from "../DarkLightIconButton";
 
 const ToggleBarContainer = styled(Paper)(({ theme }) => ({
+	boxSizing: "border-box",
 	height: "5vh",
 	display: "flex",
 	justifyContent: "flex-end",
 	alignItems: "center",
 	paddingTop: "20px",
-	paddingBottom: "10px",
+	paddingBottom: "0px",
 
 	boxShadow: "none",
 	borderRadius: "0px",

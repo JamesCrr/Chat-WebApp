@@ -20,7 +20,13 @@ const Chat = ({ authUser }) => {
 	const dataLoadedBeforeRef = useRef(false); // Initial data been loaded before?
 	// Overlay
 	const [renderOverlay, setRenderOverlay] = useState(false);
-	const [overlayDetails, setOverlayDetails] = useState({ newRoom: false, roomDetails: false, error: false, errorMessage: "" });
+	const [overlayDetails, setOverlayDetails] = useState({
+		newRoom: false,
+		roomDetails: false,
+		error: false,
+		errorMessage: "",
+		waitingForServer: true,
+	});
 	// Connected Users
 	const [connectedUsers, setConnectedUsers] = useState(new Map());
 	// Rooms
@@ -180,7 +186,7 @@ const Chat = ({ authUser }) => {
 	 * @param {Number} overlayType
 	 */
 	const enableNewRoomOverlay = (overlayType) => {
-		const newOverlayDetail = { newRoom: false, roomDetails: false, error: false, errorMessage: "" };
+		const newOverlayDetail = { newRoom: false, roomDetails: false, error: false, errorMessage: "", waitingForServer: false };
 		switch (overlayType) {
 			case OVERLAYTYPES.NEWROOM:
 				newOverlayDetail.newRoom = true;
@@ -198,7 +204,7 @@ const Chat = ({ authUser }) => {
 	 */
 	const disableOverlay = () => {
 		setRenderOverlay(false);
-		setOverlayDetails({ ...overlayDetails, error: false, errorMessage: "" });
+		setOverlayDetails({ ...overlayDetails, error: false, errorMessage: "", waitingForServer: false });
 	};
 	/**
 	 * Attempt to create/join new Room at Server, if successful, update State and IOServer
@@ -206,6 +212,7 @@ const Chat = ({ authUser }) => {
 	 */
 	const createNewRoom = async (newRoomToCreate) => {
 		console.log("RoomToCreate:", newRoomToCreate);
+		setOverlayDetails({ ...overlayDetails, waitingForServer: true });
 		let result;
 		try {
 			result = await fetch("http://localhost:5000/chat/createnewroom", {
@@ -224,7 +231,7 @@ const Chat = ({ authUser }) => {
 		// Not joined, so definetely not created as well
 		// Show error message
 		if (!joined) {
-			setOverlayDetails({ ...overlayDetails, errorMessage: "Room already joined!", error: true });
+			setOverlayDetails({ ...overlayDetails, error: true, errorMessage: "Room already joined!", waitingForServer: false });
 			return;
 		}
 
@@ -267,6 +274,7 @@ const Chat = ({ authUser }) => {
 	 * @param {String} name Name of room to delete
 	 */
 	const deleteRoom = async (name) => {
+		setOverlayDetails({ ...overlayDetails, waitingForServer: true });
 		const result = await fetch("http://localhost:5000/chat/deleteroom", {
 			method: "POST",
 			headers: {
@@ -288,6 +296,7 @@ const Chat = ({ authUser }) => {
 	};
 	const leaveRoom = async (name) => {
 		console.log("Leaving Room:", name);
+		setOverlayDetails({ ...overlayDetails, waitingForServer: true });
 		const result = await fetch("http://localhost:5000/chat/leaveroom", {
 			method: "POST",
 			headers: {

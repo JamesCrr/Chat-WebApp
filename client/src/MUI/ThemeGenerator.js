@@ -38,6 +38,11 @@ const paletteGenerator = (paletteMode) => {
 						paper: backgroundPaper_dark,
 						paperer: backgroundPaperer_dark,
 					},
+					text: {
+						primary: "rgba(240, 240, 240, 0.9)",
+						secondary: "rgba(240, 240, 240, 0.7)",
+						disabled: "rgba(240, 240, 240, 0.5)",
+					},
 			  }),
 	};
 };
@@ -88,10 +93,13 @@ const breakpointsGenerator = () => {
 };
 const typographyGenerator = (theme) => {
 	return {
+		...theme.typography,
 		h6: {
-			[theme.breakpoints.up("md")]: {
-				fontSize: "2.4rem",
+			...theme.typography.h6,
+			[theme.breakpoints.down("sm")]: {
+				fontSize: "1rem",
 			},
+			"@media only screen and (max-width: 600px) ": {},
 		},
 	};
 };
@@ -101,9 +109,9 @@ const getMaterialTheme = (darkMode) => {
 	themeOptions.palette = paletteGenerator(darkMode ? "dark" : "light");
 	themeOptions.components = componentsGenerator(darkMode);
 	themeOptions.breakpoints = breakpointsGenerator();
-	const themeObject = createTheme(themeOptions);
-	// themeOptions.typography = typographyGenerator();
-
-	return responsiveFontSizes(themeObject);
+	let themeObject = createTheme(themeOptions);
+	themeObject = responsiveFontSizes(themeObject); // MUI BuiltIn Responsive font sizes
+	themeObject.typography = typographyGenerator(themeObject); // Own values
+	return themeObject;
 };
 export default getMaterialTheme;

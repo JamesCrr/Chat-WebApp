@@ -54,11 +54,20 @@ const SidebarIconSVG = styled("svg", { shouldForwardProp: (prop) => prop !== "si
 	width: "24px",
 	height: "24px",
 }));
-const RoomListContainer2 = styled(Box, { shouldForwardProp: (prop) => prop !== "sidebarActive" })(({ sidebarActive, theme }) => ({
+const RoomListBoxBackground = styled(Box, { shouldForwardProp: (prop) => prop !== "sidebarActive" })(({ sidebarActive, theme }) => ({
 	height: "100%",
 	width: "100%",
 	background: theme.palette.background.paper,
-	transition: `opacity 0.1s, background ${theme.palette.transitionTime}`,
+	transition: `background ${theme.palette.transitionTime}`,
+	display: "block",
+	position: "absolute",
+	zIndex: "2",
+}));
+const RoomListBox2 = styled(Box, { shouldForwardProp: (prop) => prop !== "sidebarActive" })(({ sidebarActive, theme }) => ({
+	height: "100%",
+	width: "100%",
+	background: theme.palette.background.paper,
+	transition: `opacity 0.3s, background ${theme.palette.transitionTime}`,
 	display: "block",
 	position: "relative",
 	zIndex: "2",
@@ -134,14 +143,15 @@ const RoomList = ({ roomMap, unreadMessagesMap, selectedRoomName, selectedRoomCh
 
 	return (
 		<RoomListContainer1 sidebarActive={sidebarActive}>
-			<RoomListContainer2 sidebarActive={sidebarActive}>
+			<RoomListBoxBackground sidebarActive={sidebarActive}></RoomListBoxBackground>
+			<RoomListBox2 sidebarActive={sidebarActive}>
 				<AddRoomButton variant="contained" onClick={() => openNewRoomOverlay(OVERLAYTYPES.NEWROOM)}>
 					<Typography fontWeight={"bold"} variant="button">
 						Add / Join
 					</Typography>
 				</AddRoomButton>
 				<RoomListParent>{renderRoomMap()}</RoomListParent>
-			</RoomListContainer2>
+			</RoomListBox2>
 			<SidebarButtonContainer>
 				<SidebarButton sidebarActive={sidebarActive} onClick={onSidebarButtonClicked} disableFocusRipple disableRipple>
 					<SidebarIconSVG sidebarActive={sidebarActive} viewBox="0 0 24 24">

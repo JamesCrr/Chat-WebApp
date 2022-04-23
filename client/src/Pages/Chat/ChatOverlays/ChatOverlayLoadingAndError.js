@@ -7,7 +7,7 @@ const OverlayContainer = styled(Paper, { shouldForwardProp: (prop) => prop !== "
 
 	opacity: active ? "1" : "0",
 	visibility: active ? "visible" : "hidden",
-	background: theme.palette.background.default,
+	background: theme.palette.background.paper,
 	boxShadow: "none",
 	borderRadius: "0px",
 	height: "100vh",
@@ -24,9 +24,18 @@ const ErrorContainer = styled(Paper)(({ theme }) => ({
 	flexDirection: "column",
 	width: "50%",
 	height: "50%",
-	background: theme.palette.background.paper,
+	background: theme.palette.background.default,
 }));
-const LogOutButton = styled(Button)(({ theme }) => ({}));
+const LogOutButton = styled(Button)(({ theme }) => ({
+	color: theme.palette.text.primary,
+	background: theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.main,
+
+	"@media (hover:hover)": {
+		"&:hover": {
+			background: theme.palette.mode === "dark" ? theme.palette.primary.main : theme.palette.primary.dark,
+		},
+	},
+}));
 
 const AppOverlay = ({ logOutFunc, loading, error }) => {
 	/**
@@ -45,11 +54,15 @@ const AppOverlay = ({ logOutFunc, loading, error }) => {
 		if (error)
 			return (
 				<ErrorContainer>
-					<Paper sx={{ boxShadow: "none", borderRadius: "0px", textAlign: "center" }}>
-						<Typography variant="h3">Server Error..</Typography>
-						<Typography variant="h3">Please try again later..</Typography>
+					<Paper sx={{ background: "none", boxShadow: "none", borderRadius: "0px", textAlign: "center" }}>
+						<Typography color={(theme) => theme.palette.error.dark} variant="h3">
+							Server Error
+						</Typography>
+						<Typography color={(theme) => theme.palette.text.secondary} variant="h3">
+							Please try again later..
+						</Typography>
 					</Paper>
-					<LogOutButton variant="outlined" onClick={logOutFunc}>
+					<LogOutButton variant="contained" onClick={logOutFunc}>
 						Log out
 					</LogOutButton>
 				</ErrorContainer>

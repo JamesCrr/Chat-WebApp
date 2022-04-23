@@ -1,6 +1,14 @@
 import { styled, IconButton, Paper, useTheme } from "@mui/material";
 
-const ToggleThemeAppearanceIconButton = styled(IconButton)(({ theme }) => ({}));
+const ToggleThemeAppearanceIconButton = styled(IconButton)(({ theme }) => ({
+	[theme.breakpoints.down("md")]: {
+		padding: "4px",
+	},
+	[theme.breakpoints.down("sm")]: {
+		transform: "scale(0.9)",
+		padding: "2px",
+	},
+}));
 const ThemeIconContainer = styled(Paper)(({ theme }) => ({
 	width: "24px",
 	height: "24px",
@@ -10,13 +18,9 @@ const ThemeIconContainer = styled(Paper)(({ theme }) => ({
 const ThemeLightIcon = styled("i")(({ theme }) => ({
 	transition: `opacity ${theme.palette.transitionTime}, transform ${theme.palette.transitionTime}`,
 	opacity: theme.palette.mode === "light" ? "1" : "0",
-	transform: theme.palette.mode === "light" ? "rotate(0deg) scale(1.3)" : "rotate(360deg) scale(0.5)",
+	transform: theme.palette.mode === "light" ? "rotate(0deg) scale(1.2)" : "rotate(360deg) scale(0.5)",
 	position: "absolute",
 	display: "block",
-
-	[theme.breakpoints.down("md")]: {
-		transform: theme.palette.mode === "light" ? "rotate(0deg) scale(1.3)" : "rotate(360deg) scale(0.5)",
-	},
 }));
 const ThemeDarkIcon = styled("i")(({ theme }) => ({
 	transition: `opacity ${theme.palette.transitionTime}, transform ${theme.palette.transitionTime}`,
