@@ -135,7 +135,7 @@ const RoomList = ({ roomMap, unreadMessagesMap, selectedRoomName, selectedRoomCh
 	 * @param {Object} roomDetails Room details
 	 */
 	const onRoomItemClicked = (roomDetails) => {
-		console.log("RoomClicked:", roomDetails.name);
+		//console.log("RoomClicked:", roomDetails.name);
 		selectedRoomChangedFunc(roomDetails);
 	};
 

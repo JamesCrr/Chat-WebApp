@@ -82,7 +82,7 @@ const Chat = ({ authUser }) => {
 	 */
 	const fetchInitialData = async () => {
 		// Get all rooms the user is in
-		let result = await fetch("http://localhost:5000/chat/myrooms", {
+		let result = await fetch(process.env.REACT_APP_SERVERURL + "/chat/myrooms", {
 			headers: {
 				username: authUser.getUsername(),
 				jwtAuth: authUser.getJWT(),
@@ -95,7 +95,7 @@ const Chat = ({ authUser }) => {
 		// Register those rooms in SocketIO
 		socketInstance.emitEvent("joinroom", { firstTimeJoined: false, roomNames, username: authUser.getUsername() });
 		// Get messages in all Rooms
-		result = await fetch("http://localhost:5000/chat/myroomsmessages", {
+		result = await fetch(process.env.REACT_APP_SERVERURL + "/chat/myroomsmessages", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -211,11 +211,11 @@ const Chat = ({ authUser }) => {
 	 * @param {String} newRoomToCreate Name of new room to create
 	 */
 	const createNewRoom = async (newRoomToCreate) => {
-		console.log("RoomToCreate:", newRoomToCreate);
+		//console.log("RoomToCreate:", newRoomToCreate);
 		setOverlayDetails({ ...overlayDetails, waitingForServer: true });
 		let result;
 		try {
-			result = await fetch("http://localhost:5000/chat/createnewroom", {
+			result = await fetch(process.env.REACT_APP_SERVERURL + "/chat/createnewroom", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -241,7 +241,7 @@ const Chat = ({ authUser }) => {
 		// Fetch existing messages from server or empty array
 		if (!created) {
 			// Fetch existing messages
-			result = await fetch("http://localhost:5000/chat/myroomsmessages", {
+			result = await fetch(process.env.REACT_APP_SERVERURL + "/chat/myroomsmessages", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -275,7 +275,7 @@ const Chat = ({ authUser }) => {
 	 */
 	const deleteRoom = async (name) => {
 		setOverlayDetails({ ...overlayDetails, waitingForServer: true });
-		const result = await fetch("http://localhost:5000/chat/deleteroom", {
+		const result = await fetch(process.env.REACT_APP_SERVERURL + "/chat/deleteroom", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -295,9 +295,9 @@ const Chat = ({ authUser }) => {
 		// Should not be modifying state here
 	};
 	const leaveRoom = async (name) => {
-		console.log("Leaving Room:", name);
+		//console.log("Leaving Room:", name);
 		setOverlayDetails({ ...overlayDetails, waitingForServer: true });
-		const result = await fetch("http://localhost:5000/chat/leaveroom", {
+		const result = await fetch(process.env.REACT_APP_SERVERURL + "/chat/leaveroom", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -327,7 +327,7 @@ const Chat = ({ authUser }) => {
 	 * @param {Object} payload Message details
 	 */
 	function ioListenerMessageReceived(payload) {
-		console.log("recevied message", payload);
+		//console.log("recevied message", payload);
 		addMessageToState(payload);
 	}
 	/**
@@ -335,7 +335,7 @@ const Chat = ({ authUser }) => {
 	 * @param {Object} payload Message details
 	 */
 	function ioListenerSERVERMessageReceived(payload) {
-		console.log("received SERVER message", payload);
+		//console.log("received SERVER message", payload);
 		// Set the message date, as the timing from the server
 		// might be different
 		const currentDateString = new Date().toJSON();
@@ -359,7 +359,7 @@ const Chat = ({ authUser }) => {
 	 */
 	function ioListenerSocketLeftRoom(payload) {
 		const { leftRoomName } = payload;
-		console.log("Removing Room from state:", leftRoomName);
+		//console.log("Removing Room from state:", leftRoomName);
 		// Remove room from state
 		removeRoomFromState(leftRoomName);
 		removeUnreadMessageCountFromState(leftRoomName);
@@ -376,7 +376,7 @@ const Chat = ({ authUser }) => {
 	 */
 	function ioListenerOtherSocketJoinedLeftRoom(payload) {
 		const { joined, roomName, username } = payload;
-		console.log(username + (joined ? " joining " : " leaving ") + roomName);
+		//console.log(username + (joined ? " joining " : " leaving ") + roomName);
 		// Find the room to modify
 		const newMap = new Map(roomObjMap);
 		const roomToModify = newMap.get(roomName);
@@ -395,7 +395,7 @@ const Chat = ({ authUser }) => {
 	 */
 	function ioListenerUpdateRoomOwner(payload) {
 		const { newOwnerusername, roomName } = payload;
-		console.log("Room [" + roomName + "] got new Owner: " + newOwnerusername);
+		//console.log("Room [" + roomName + "] got new Owner: " + newOwnerusername);
 		// Change owner of room and Update State
 		const newMap = new Map(roomObjMap);
 		newMap.get(roomName).owner = newOwnerusername;
@@ -408,7 +408,7 @@ const Chat = ({ authUser }) => {
 	async function ioListenerRefreshRoomUsersArray(payload) {
 		const { roomName } = payload;
 		// Get data from MongoDB
-		let result = await fetch("http://localhost:5000/chat/myrooms", {
+		let result = await fetch(process.env.REACT_APP_SERVERURL + "/chat/myrooms", {
 			headers: {
 				username: authUser.getUsername(),
 				roomName: roomName,
@@ -417,7 +417,7 @@ const Chat = ({ authUser }) => {
 		});
 		const roomResultJSON = await result.json();
 		const newUsersArray = roomResultJSON.rooms.users;
-		console.log("Room [" + roomName + "] refreshing users array: " + newUsersArray);
+		//console.log("Room [" + roomName + "] refreshing users array: " + newUsersArray);
 		// Change users of room and Update State
 		const newMap = new Map(roomObjMap);
 		newMap.get(roomName).users = newUsersArray;

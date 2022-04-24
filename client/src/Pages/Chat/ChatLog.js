@@ -169,7 +169,7 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 		e.preventDefault();
 		// Prevent sending empty values
 		if (validator.isEmpty(fieldValue, { ignore_whitespace: true })) return;
-		console.log("Submitted:", fieldValue);
+		//console.log("Submitted:", fieldValue);
 		submitFieldValueFunc(fieldValue);
 		setFieldValue("");
 	};

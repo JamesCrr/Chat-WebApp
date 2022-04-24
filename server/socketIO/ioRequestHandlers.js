@@ -8,7 +8,7 @@ module.exports = (ioServer) => {
 	const chatMessage = function (payload) {
 		const socket = this;
 		const { roomTarget, sender, content } = payload;
-		console.log(socket.id, "sent this:", content, "|| room:", roomTarget);
+		//console.log(socket.id, "sent this:", content, "|| room:", roomTarget);
 		/**
 		 * [updatedDateString] calculated independently when received event.
 		 * [updatedDateString] will not be synced with DB as did not wait for DB to
@@ -29,10 +29,10 @@ module.exports = (ioServer) => {
 		// Join roomNames provided in payload
 		for (let i = 0; i < roomNames.length; i++) {
 			socket.join(roomNames[i]);
-			console.log(socket.id, "Joining Room:", roomNames[i]);
+			//console.log(socket.id, "Joining Room:", roomNames[i]);
 			// Emit joining message to members
 			if (firstTimeJoined) {
-				console.log("first time join!");
+				//console.log("first time join!");
 				// Wait a little before emitting message
 				setTimeout(() => {
 					// Emit all room users, Welcome message
@@ -54,7 +54,7 @@ module.exports = (ioServer) => {
 		if (typeof roomNames === "string") roomNames = [roomNames];
 		// Leave rooms provided in roomNames
 		for (let i = 0; i < roomNames.length; i++) {
-			console.log(socket.id, "Leaving Room:", roomNames[i]);
+			//console.log(socket.id, "Leaving Room:", roomNames[i]);
 			// Leave room
 			socket.leave(roomNames[i]);
 			// Emit all room users, leaving message of socket in Room
@@ -107,7 +107,7 @@ module.exports = (ioServer) => {
 
 	const socketDisconnecting = function () {
 		const socket = this;
-		console.log(socket.id, "about to leave");
+		//console.log(socket.id, "about to leave");
 		// Remove from map of connected users
 		userDisconnected(socket.id);
 	};

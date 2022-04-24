@@ -39,7 +39,7 @@ const Register = () => {
 	 */
 	const handleRegistering = async () => {
 		try {
-			const res = await fetch("http://localhost:5000/auth/register", {
+			const res = await fetch(process.env.REACT_APP_SERVERURL + "/auth/register", {
 				method: "POST",
 				headers: {
 					"Content-type": "application/json",
@@ -51,7 +51,7 @@ const Register = () => {
 			const resJSON = await res.json();
 			// Check for other error flags
 			if (resJSON.errorCode) throw new Error(resJSON.message);
-			console.log(resJSON);
+			//console.log(resJSON);
 			// Register success, go to login page
 			routerDOMNavigate("/login", { replace: true });
 		} catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import validator from "validator";
 import { Container, TextField, Typography } from "@mui/material";
@@ -28,7 +28,7 @@ const Login = ({ LoginUser }) => {
 	const onPasswordChange = (e) => setPassword(e.target.value);
 	const handleLogin = async () => {
 		try {
-			const res = await fetch("http://localhost:5000/auth/login", {
+			const res = await fetch(process.env.REACT_APP_SERVERURL + "/auth/login", {
 				method: "POST",
 				headers: {
 					"Content-type": "application/json",

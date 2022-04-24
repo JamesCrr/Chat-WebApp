@@ -31,7 +31,7 @@ app.use(errorHandlerMiddleware);
 ioServer.use(authMiddleware);
 // SocketIO Server Listener
 ioServer.on("connection", (socket) => {
-	console.log(socket.id, "connected to server");
+	//console.log(socket.id, "connected to server");
 
 	// User Connected => user first joins server
 	// User Disconnected => user leaves server
@@ -49,7 +49,8 @@ ioServer.on("connection", (socket) => {
 	socket.on("chatmessage", chatMessage);
 
 	socket.on("disconnecting", socketDisconnecting);
-	socket.on("disconnect", () => console.log("socket left"));
+	// socket.on("disconnect", () => console.log("socket left"));
+	socket.on("disconnect", () => {});
 });
 
 // Start Server

@@ -20,7 +20,7 @@ const useSocketIO = (jwt, connectedCallback, disconnectCallback, errorCallback) 
 	 * Connects the socket to the Server
 	 */
 	const connectSocket = () => {
-		socketRef = io("http://localhost:5000", { auth: { token: jwt } });
+		socketRef = io(process.env.REACT_APP_SERVERURL, { auth: { token: jwt } });
 		socketRef.on("connect", () => {
 			console.log("SocketIO Connected!");
 			connectedCallback();
