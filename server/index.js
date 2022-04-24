@@ -54,7 +54,7 @@ ioServer.on("connection", (socket) => {
 });
 
 // Start Server
-const portNum = process.env.HTTP_PORT || 7000;
+const portNum = process.env.PORT || 7000;
 const startServer = async () => {
 	// Connect to MongoDB first
 	await mongoose.connect(process.env.MONGOURL);
