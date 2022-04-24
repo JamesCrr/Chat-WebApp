@@ -1,4 +1,5 @@
 import { useState } from "react";
+import validator from "validator";
 import { AddNewRoomContentBox, AddNewRoomButton, ErrorTypography } from "./ChatOverlayStyles";
 import { Box, Typography, TextField, Fade } from "@mui/material";
 
@@ -12,9 +13,9 @@ const ChatOverlayNewRoom = ({ overlayDetails, createNewRoomFunc }) => {
 	const onNewRoomNameFieldChange = (e) => setNewRoomName(e.target.value);
 	const onNewRoomNameFieldSubmit = (e) => {
 		e.preventDefault();
-		// [TODO]: Validate Input here
-		// ...
-		if (newRoomName === "") return;
+		// Validate Input
+		if (validator.isEmpty(newRoomName, { ignore_whitespace: true })) return;
+		// Create the room
 		createNewRoomFunc(newRoomName);
 		setNewRoomName("");
 	};

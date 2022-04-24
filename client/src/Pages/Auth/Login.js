@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
+import validator from "validator";
 import { Container, TextField, Typography } from "@mui/material";
 import {
 	PageBackgroundPaper,
@@ -26,8 +27,6 @@ const Login = ({ LoginUser }) => {
 	const onEmailChange = (e) => setEmail(e.target.value);
 	const onPasswordChange = (e) => setPassword(e.target.value);
 	const handleLogin = async () => {
-		// [TODO]:
-		// Validate data bfr sending..
 		try {
 			const res = await fetch("http://localhost:5000/auth/login", {
 				method: "POST",
@@ -54,7 +53,9 @@ const Login = ({ LoginUser }) => {
 		}
 	};
 	const onSubmitButtonPressed = () => {
-		if (!email || !password || waitingForServer) return false;
+		// Validate data
+		if (validator.isEmpty(email, { ignore_whitespace: true }) || validator.isEmpty(password, { ignore_whitespace: true }) || waitingForServer)
+			return false;
 		// Wait for server responses
 		setWaitingForServer(true);
 		// Send login info to server

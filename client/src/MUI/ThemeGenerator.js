@@ -2,7 +2,7 @@ import { createTheme, responsiveFontSizes } from "@mui/material";
 
 const darkModeTransTime = "0.3s";
 const backgroundDefault_light = "#fff";
-const backgroundPaper_light = "#d6d6d6";
+const backgroundPaper_light = "#e3e3e3";
 const backgroundPaperer_light = "#929292";
 
 const backgroundDefault_dark = "#121212";

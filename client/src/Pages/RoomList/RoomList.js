@@ -5,22 +5,22 @@ import { useState } from "react";
 
 const RoomListContainer1 = styled(Box, { shouldForwardProp: (prop) => prop !== "sidebarActive" })(({ sidebarActive, theme }) => ({
 	height: "100vh",
+	width: "20%",
+	position: "static",
+	display: "block",
+	transition: `background ${theme.palette.transitionTime}`,
 	background: theme.palette.background.paper,
-	transition: `width 0.3s, background ${theme.palette.transitionTime}`,
 
-	[theme.breakpoints.up("xs")]: {
-		width: sidebarActive ? "80%" : "0%",
+	[theme.breakpoints.down("sm")]: {
+		transition: `width 0.3s, background ${theme.palette.transitionTime}`,
+		boxShadow: "0px 0px 20px 1px black",
+		width: sidebarActive ? "70%" : "0%",
 
 		position: "absolute",
 		zIndex: "2",
 		display: "flex",
 		justifyContent: "flex-start",
 		alignItems: "center",
-	},
-	[theme.breakpoints.up("sm")]: {
-		width: "20%",
-		position: "static",
-		display: "block",
 	},
 }));
 const SidebarButtonContainer = styled(Paper)(({ theme }) => ({
@@ -43,6 +43,7 @@ const SidebarButton = styled(IconButton, { shouldForwardProp: (prop) => prop !==
 	transition: `background ${theme.palette.transitionTime}`,
 	borderRadius: "30px",
 	opacity: sidebarActive ? "1" : "0.5",
+	boxShadow: sidebarActive ? "0px 0px 20px 2px black" : "none",
 
 	"& .hover": {
 		background: theme.palette.background.paper,
@@ -55,13 +56,18 @@ const SidebarIconSVG = styled("svg", { shouldForwardProp: (prop) => prop !== "si
 	height: "24px",
 }));
 const RoomListBoxBackground = styled(Box, { shouldForwardProp: (prop) => prop !== "sidebarActive" })(({ sidebarActive, theme }) => ({
-	height: "100%",
-	width: "100%",
+	height: "0",
+	width: "0",
 	background: theme.palette.background.paper,
 	transition: `background ${theme.palette.transitionTime}`,
-	display: "block",
-	position: "absolute",
-	zIndex: "2",
+
+	[theme.breakpoints.down("sm")]: {
+		height: "100%",
+		width: "100%",
+		display: "block",
+		position: "absolute",
+		zIndex: "2",
+	},
 }));
 const RoomListBox2 = styled(Box, { shouldForwardProp: (prop) => prop !== "sidebarActive" })(({ sidebarActive, theme }) => ({
 	height: "100%",
@@ -86,14 +92,30 @@ const RoomListBox2 = styled(Box, { shouldForwardProp: (prop) => prop !== "sideba
 		opacity: "1",
 	},
 }));
+const AddRoomButtonBox = styled(Box)(({ theme }) => ({
+	display: "flex",
+	justifyContent: "center",
+	alignItems: "center",
+	margin: "10px 0px",
+
+	[theme.breakpoints.down("sm")]: {
+		margin: "5px 0px",
+	},
+}));
 const AddRoomButton = styled(Button)(({ theme }) => ({
-	width: "100%",
+	boxSizing: "border-box",
 	borderRadius: "20px",
-	marginTop: "2px",
+	width: "90%",
+
+	[theme.breakpoints.down("sm")]: {
+		width: "96%",
+	},
 
 	background: theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.main,
-	"&:hover": {
-		background: theme.palette.mode === "dark" ? theme.palette.primary.main : theme.palette.primary.dark,
+	"@media (hover:hover)": {
+		"&:hover": {
+			background: theme.palette.mode === "dark" ? theme.palette.primary.main : theme.palette.primary.dark,
+		},
 	},
 }));
 const RoomListParent = styled(Box)(({ theme }) => ({
@@ -145,11 +167,21 @@ const RoomList = ({ roomMap, unreadMessagesMap, selectedRoomName, selectedRoomCh
 		<RoomListContainer1 sidebarActive={sidebarActive}>
 			<RoomListBoxBackground sidebarActive={sidebarActive}></RoomListBoxBackground>
 			<RoomListBox2 sidebarActive={sidebarActive}>
-				<AddRoomButton variant="contained" onClick={() => openNewRoomOverlay(OVERLAYTYPES.NEWROOM)}>
-					<Typography fontWeight={"bold"} variant="button">
-						Add / Join
-					</Typography>
-				</AddRoomButton>
+				<AddRoomButtonBox>
+					<AddRoomButton variant="contained" onClick={() => openNewRoomOverlay(OVERLAYTYPES.NEWROOM)}>
+						<Typography
+							sx={{
+								"@media only screen and (max-width:180px)": {
+									fontSize: "0.72rem",
+								},
+							}}
+							fontWeight={"bold"}
+							variant="button"
+						>
+							Add / Join
+						</Typography>
+					</AddRoomButton>
+				</AddRoomButtonBox>
 				<RoomListParent>{renderRoomMap()}</RoomListParent>
 			</RoomListBox2>
 			<SidebarButtonContainer>

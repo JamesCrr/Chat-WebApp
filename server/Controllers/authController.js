@@ -21,14 +21,14 @@ const AttemptRegister = async (req, res, next) => {
 		// convert the username toLowerCase for easier checking
 		let result = await userModel.findOne({ $or: [{ username: { $regex: new RegExp(`^${username}$`, "i") } }, { email }] });
 		if (result) throw new Error("Username or Email taken");
-		// // Register new user into DB
-		// // [TODO]: Uncomment this before deploying!
-		// const userDocument = await userModel.create({ username, email, password });
+		// Register new user into DB
+		// [TODO]: Uncomment this before deploying!
+		const userDocument = await userModel.create({ username, email, password });
 
-		// // Add new user to main room
-		// result = await roomModel.findOne({ deletable: false });
-		// result.users.push(username);
-		// await result.save(); // Save to MongoDB
+		// Add new user to main room
+		result = await roomModel.findOne({ deletable: false });
+		result.users.push(username);
+		await result.save(); // Save to MongoDB
 	} catch (error) {
 		return next(new BadRequestError(error.message));
 	}

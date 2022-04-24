@@ -19,7 +19,7 @@ module.exports = (ioServer) => {
 		// Emit all room users
 		ioServer.in(roomTarget).emit("receivemessage", { createdDateString: updatedDateString, updatedDateString, roomTarget, sender, content });
 		// Send to DB
-		// addMessageToDb(content, sender, roomTarget);
+		addMessageToDb(content, sender, roomTarget);
 	};
 	const joinRoom = function (payload) {
 		const socket = this;
