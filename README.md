@@ -2,7 +2,8 @@
 
 ![Image](images/chat.png)
 
-Project to learn more about SocketIO, Express, React as well as to gain more experience developing full stack applications.
+Project to learn more about SocketIO, Express, React as well as to gain more experience developing full stack applications.\
+ App is hosted on netlify and can be found [here](https://beeschats.netlify.app/).
 
 ## Features
 
