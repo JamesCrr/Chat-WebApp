@@ -5,7 +5,8 @@ import { Box } from "@mui/material";
 import ChatRoomLog from "./Chat/ChatLog";
 import RoomList from "./RoomList/RoomList";
 import ChatOverlay from "./Chat/ChatOverlays/ChatOverlay";
-import AppOverlay from "./Chat/ChatOverlays/ChatOverlayLoadingAndError";
+import LoadingAndErrorOverlay from "./Chat/ChatOverlays/ChatOverlayLoadingAndError";
+import NotificationChip from "./Chat/ChatOverlays/NotificationChip";
 
 export const OVERLAYTYPES = {
 	NEWROOM: 0,
@@ -27,6 +28,7 @@ const Chat = ({ authUser }) => {
 		errorMessage: "",
 		waitingForServer: true,
 	});
+	const [notificationChipDetails, setNotificationClipDetails] = useState({ active: false, message: "" });
 	// Connected Users
 	const [connectedUsers, setConnectedUsers] = useState(new Map());
 	// Rooms
@@ -207,6 +209,11 @@ const Chat = ({ authUser }) => {
 		setOverlayDetails({ ...overlayDetails, error: false, errorMessage: "", waitingForServer: false });
 	};
 	/**
+	 * Closes the Notification Chip
+	 */
+	const closeNotificationChip = () => setNotificationClipDetails({ ...notificationChipDetails, active: false });
+
+	/**
 	 * Attempt to create/join new Room at Server, if successful, update State and IOServer
 	 * @param {String} newRoomToCreate Name of new room to create
 	 */
@@ -358,7 +365,7 @@ const Chat = ({ authUser }) => {
 	 * @param {Object} payload
 	 */
 	function ioListenerSocketLeftRoom(payload) {
-		const { leftRoomName } = payload;
+		const { leftRoomName, situation } = payload;
 		//console.log("Removing Room from state:", leftRoomName);
 		// Remove room from state
 		removeRoomFromState(leftRoomName);
@@ -369,6 +376,10 @@ const Chat = ({ authUser }) => {
 			setSelectedRoomObj(roomObjMap.values().next().value);
 			disableOverlay();
 		}
+
+		// Set up notification depending on situation
+		if (situation.roomDeleted) setNotificationClipDetails({ active: true, message: `${leftRoomName} was deleted` });
+		else if (situation.leftRoom) setNotificationClipDetails({ active: true, message: `Left ${leftRoomName}` });
 	}
 	/**
 	 * Listener function when OTHER socket Joined/Left a room
@@ -440,7 +451,7 @@ const Chat = ({ authUser }) => {
 	};
 	return (
 		<div>
-			<AppOverlay logOutFunc={authUser.handleLogout} loading={isDataStillLoading()} error={socketInstance.isSocketError()} />
+			<LoadingAndErrorOverlay logOutFunc={authUser.handleLogout} loading={isDataStillLoading()} error={socketInstance.isSocketError()} />
 			{dataLoaded && (
 				<Box>
 					<ChatOverlay {...chatOverlayProps} />
@@ -460,6 +471,7 @@ const Chat = ({ authUser }) => {
 							submitFieldValueFunc={ioEmitMessage}
 						/>
 					</Box>
+					<NotificationChip chipDetails={notificationChipDetails} removeChipFunc={closeNotificationChip} />
 				</Box>
 			)}
 		</div>

@@ -1,4 +1,4 @@
-import { styled, Paper, Typography, Button } from "@mui/material";
+import { styled, Paper, Typography, Button, Box, CircularProgress } from "@mui/material";
 
 const OverlayContainer = styled(Paper, { shouldForwardProp: (prop) => prop !== "active" })(({ active, theme }) => ({
 	transition: "opacity 0.5s, visibility 0s 0.5s",
@@ -37,7 +37,7 @@ const LogOutButton = styled(Button)(({ theme }) => ({
 	},
 }));
 
-const AppOverlay = ({ logOutFunc, loading, error }) => {
+const LoadingAndErrorOverlay = ({ logOutFunc, loading, error }) => {
 	/**
 	 * Logic that decides whether the overlay should be active
 	 * @returns Boolean
@@ -67,11 +67,16 @@ const AppOverlay = ({ logOutFunc, loading, error }) => {
 					</LogOutButton>
 				</ErrorContainer>
 			);
-		else if (loading) return <Typography variant="h2">Loading..</Typography>;
+		else if (loading)
+			return (
+				<Box sx={{ transform: "scale(1.5)" }}>
+					<CircularProgress />
+				</Box>
+			);
 		return <></>;
 	};
 
 	return <OverlayContainer active={getFinalActiveValue()}>{getComponentToRender()}</OverlayContainer>;
 };
 
-export default AppOverlay;
+export default LoadingAndErrorOverlay;

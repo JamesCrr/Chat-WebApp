@@ -23,6 +23,14 @@ const RoomListContainer1 = styled(Box, { shouldForwardProp: (prop) => prop !== "
 		alignItems: "center",
 	},
 }));
+const MobileViewBackground = styled(Box, { shouldForwardProp: (prop) => prop !== "sidebarActive" })(({ sidebarActive, theme }) => ({
+	position: "absolute",
+	zIndex: "0",
+	width: "100vw",
+	height: "100vh",
+	display: sidebarActive ? "block" : "none",
+	background: "none",
+}));
 const SidebarButtonContainer = styled(Paper)(({ theme }) => ({
 	position: "absolute",
 	zIndex: "1",
@@ -138,7 +146,10 @@ const RoomList = ({ roomMap, unreadMessagesMap, selectedRoomName, selectedRoomCh
 		//console.log("RoomClicked:", roomDetails.name);
 		selectedRoomChangedFunc(roomDetails);
 	};
-
+	/**
+	 * When the MobileView Sidebar Button was clicked
+	 * @param {Object} e
+	 */
 	const onSidebarButtonClicked = (e) => {
 		setSidebarActive(!sidebarActive);
 	};
@@ -184,6 +195,7 @@ const RoomList = ({ roomMap, unreadMessagesMap, selectedRoomName, selectedRoomCh
 				</AddRoomButtonBox>
 				<RoomListParent>{renderRoomMap()}</RoomListParent>
 			</RoomListBox2>
+			{/* For Mobile View only */}
 			<SidebarButtonContainer>
 				<SidebarButton sidebarActive={sidebarActive} onClick={onSidebarButtonClicked} disableFocusRipple disableRipple>
 					<SidebarIconSVG sidebarActive={sidebarActive} viewBox="0 0 24 24">
@@ -194,6 +206,7 @@ const RoomList = ({ roomMap, unreadMessagesMap, selectedRoomName, selectedRoomCh
 					</SidebarIconSVG>
 				</SidebarButton>
 			</SidebarButtonContainer>
+			<MobileViewBackground sidebarActive={sidebarActive} onClick={onSidebarButtonClicked} />
 		</RoomListContainer1>
 	);
 };

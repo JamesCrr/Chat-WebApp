@@ -68,12 +68,12 @@ module.exports = (ioServer) => {
 			// Emit all room users, update owner of room
 			if (ownerUpdateObj.modified) ioServer.in(roomNames[i]).emit("updateroomowner", { ...ownerUpdateObj, roomName: roomNames[i] });
 			// Emit individual socket that left
-			socket.emit("socketleftroom", { leftRoomName: roomNames[i] });
+			socket.emit("socketleftroom", { leftRoomName: roomNames[i], situation: { leftRoom: true } });
 		}
 	};
 	const deleteRoom = function (payload) {
 		// Emit all room users, final event
-		ioServer.in(payload).emit("socketleftroom", { leftRoomName: payload });
+		ioServer.in(payload).emit("socketleftroom", { leftRoomName: payload, situation: { roomDeleted: true } });
 		// Make all sockets leave room
 		ioServer.socketsLeave(payload);
 	};
