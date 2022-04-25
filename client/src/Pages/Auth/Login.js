@@ -24,6 +24,14 @@ const Login = ({ LoginUser }) => {
 	const [errorMessage, setErrorMessage] = useState("");
 	const [waitingForServer, setWaitingForServer] = useState(false);
 
+	/**
+	 * ONLY FOR HEROKU..
+	 * Ping Heroku beforehand to wake up dynos
+	 */
+	useEffect(() => {
+		const res = fetch(process.env.REACT_APP_SERVERURL, { method: "GET" });
+	}, []);
+
 	const onEmailChange = (e) => setEmail(e.target.value);
 	const onPasswordChange = (e) => setPassword(e.target.value);
 	const handleLogin = async () => {

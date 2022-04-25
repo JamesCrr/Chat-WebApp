@@ -141,7 +141,7 @@ const getMonthNameString = (monthIndex) => {
 	}
 };
 
-const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFieldValueFunc }) => {
+const ChatRoomLog = ({ ownUsername, chatLog, selectedRoomObj, openRoomDetailsFunc, submitFieldValueFunc }) => {
 	// Input Field
 	const [fieldValue, setFieldValue] = useState("");
 	// Chatlog
@@ -205,19 +205,22 @@ const ChatRoomLog = ({ chatLog, selectedRoomObj, openRoomDetailsFunc, submitFiel
 	const renderMessage = (name, content, createdDateString, updatedDateString) => {
 		const dateObject = new Date(createdDateString);
 		const componentKey = name + updatedDateString;
-		const messageComponent = <ChatLogMessage key={componentKey} name={name} content={content} timeString={getAMPMTimeString(dateObject)} />;
+		const messageComponent = (
+			<ChatLogMessage key={componentKey} name={name} content={content} timeString={getAMPMTimeString(dateObject)} ownself={name === ownUsername} />
+		);
 		// Need insert Date divider bfr rendering message
 		const sameDate = chatLogLastDate ? chatLogLastDate.getDate() === dateObject.getDate() : false;
 		if (sameDate) {
 			const sameMonth = chatLogLastDate ? chatLogLastDate.getMonth() === dateObject.getMonth() : false;
 			const sameYear = chatLogLastDate ? chatLogLastDate.getFullYear() === dateObject.getFullYear() : false;
+			// Just return message
 			if (sameMonth && sameYear) return messageComponent;
 		}
 		// Track latest date
 		chatLogLastDate = dateObject;
 		return (
 			<Paper key={componentKey} sx={{ background: "none", boxShadow: "none", borderRadius: "0px" }}>
-				<Divider>
+				<Divider sx={{ margin: "5px 0px" }}>
 					<Chip
 						sx={{
 							transition: `background ${theme.palette.transitionTime}, color ${theme.palette.transitionTime}`,

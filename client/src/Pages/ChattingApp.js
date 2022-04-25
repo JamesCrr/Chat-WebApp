@@ -453,6 +453,7 @@ const Chat = ({ authUser }) => {
 							openNewRoomOverlay={enableNewRoomOverlay}
 						/>
 						<ChatRoomLog
+							ownUsername={authUser.getUsername()}
 							chatLog={chatLog[selectedRoomObj.name] ? chatLog[selectedRoomObj.name] : []}
 							selectedRoomObj={selectedRoomObj}
 							openRoomDetailsFunc={enableNewRoomOverlay}
