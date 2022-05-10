@@ -14,13 +14,14 @@ const ChipBox = styled(Box, { shouldForwardProp: (prop) => prop !== "chipDetails
 const Chip1 = styled(Chip, { shouldForwardProp: (prop) => prop !== "chipDetails" })(({ chipDetails, theme }) => ({
 	transition: `opacity 0.4s, transform 0.4s, background ${theme.palette.transitionTime}, color ${theme.palette.transitionTime}`,
 	background: theme.palette.mode === "dark" ? theme.palette.error.dark : theme.palette.error.main,
-	opacity: chipDetails.active ? "1" : "0",
 	color: theme.palette.text.secondary,
+	opacity: chipDetails.active ? "1" : "0",
 	transform: chipDetails.active ? "translateY(-20px)" : "none",
 	padding: "15px 0px",
 	fontSize: "1.5rem",
 
 	"& .MuiChip-deleteIcon": {
+		display: chipDetails.active ? "block" : "none",
 		marginLeft: "5px",
 		transition: `color ${theme.palette.transitionTime}`,
 		color: theme.palette.primary.main,
@@ -55,7 +56,7 @@ const NotificationChip = ({ chipDetails, removeChipFunc }) => {
 
 	return (
 		<ChipBox chipDetails={chipDetails}>
-			<Chip1 chipDetails={chipDetails} label={chipDetails.message} onDelete={onRemoveChip}></Chip1>;
+			<Chip1 chipDetails={chipDetails} label={chipDetails.message} onDelete={onRemoveChip}></Chip1>
 		</ChipBox>
 	);
 };

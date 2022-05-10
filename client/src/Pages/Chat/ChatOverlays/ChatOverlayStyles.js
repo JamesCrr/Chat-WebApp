@@ -8,7 +8,9 @@ const OverlayBox = styled(Box)(({ theme }) => ({
 	justifyContent: "center",
 	backgroundColor: theme.palette.mode === "light" ? "rgba(100, 100, 100, 0.8)" : "rgba(50, 50, 50, 0.9)",
 	transition: `backgroundColor ${theme.palette.transitionTime}`,
-	height: "100%",
+	minHeight: "100vh",
+	minHeight: "-webkit-fill-avaliable",
+	height: "100vh",
 	width: "100%",
 }));
 const ParentContentPaper = styled(Paper, { shouldForwardProp: (props) => props !== "newRoom" })(({ newRoom, theme }) => ({
