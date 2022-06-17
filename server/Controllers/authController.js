@@ -1,4 +1,5 @@
 const userModel = require("../Models/userModel");
+const roomModel = require("../Models/roomModel");
 const { BadRequestError } = require("../Errors");
 
 const AttemptLogin = async (req, res, next) => {

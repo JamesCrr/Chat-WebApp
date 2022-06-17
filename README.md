@@ -85,6 +85,22 @@ Start the client
   npm start
 ```
 
+## Demo Accounts
+
+```
+Username: User1
+Email: user@mail.com
+Password: q
+
+Username: John
+Email: qwe@mail.com
+Password: qwe
+
+Username: Kevin
+Email: asd@mail.com
+Password: e
+```
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
