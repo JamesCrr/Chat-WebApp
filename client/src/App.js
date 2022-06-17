@@ -37,7 +37,8 @@ const App = () => {
 						<Route element={<ProtectedRoute user={authUser.isUserLoggedIn()} />}>
 							<Route path="chat" element={<Chat authUser={authUser} />} />
 						</Route>
-						<Route path="*" element={<NotFound />} />
+						{/* <Route path="*" element={<NotFound />} /> */}
+						<Route path="/" element={<Navigate to="/login" replace />} />
 					</Routes>
 				</materialContext.Provider>
 			</ThemeProvider>
