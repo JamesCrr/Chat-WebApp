@@ -101,6 +101,14 @@ Email: asd@mail.com
 Password: e
 ```
 
+## Deploying to Heroku
+
+```
+$ git add .
+$ git commit -m "commit message"
+$ git push heroku main
+```
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
