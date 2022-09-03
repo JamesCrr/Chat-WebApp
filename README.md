@@ -5,8 +5,8 @@
 Project to learn more about SocketIO, Express, React as well as to gain more experience developing full stack applications.\
 ~~App is hosted on netlify and can be found [here](https://beeschats.netlify.app/).~~
 
-> Heroku has stopped their free dynos plan and the backend no longer has a place to call home until I fix it.
-> The frontend is still hosted on netlify, just that the functionality does not work.
+**_Heroku has stopped their free dynos plan and the backend no longer has a place to call home until I fix it.
+The frontend is still hosted on netlify, just that the functionality does NOT work._**
 
 ## Features
 
